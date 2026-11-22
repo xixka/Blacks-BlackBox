@@ -559,7 +559,7 @@ class AppsFragment : Fragment() {
             AlertDialog.Builder(requireContext())
                     .setTitle(R.string.app_freeze_options)
                     .setMessage(getString(R.string.app_freeze_options_hint, info.name))
-                    .setPositiveButton("Yes") { _, _ ->
+                    .setPositiveButton(R.string.dialog_yes) { _, _ ->
                         AppFreezeManager.setExcludedFromAutoFreeze(
                                 info.packageName,
                                 info.userId,
@@ -571,7 +571,7 @@ class AppsFragment : Fragment() {
                                 )
                         )
                     }
-                    .setNegativeButton("No") { _, _ ->
+                    .setNegativeButton(R.string.dialog_no) { _, _ ->
                         AppFreezeManager.setExcludedFromAutoFreeze(
                                 info.packageName,
                                 info.userId,
@@ -645,10 +645,10 @@ class AppsFragment : Fragment() {
                 AppManager.mRemarkSharedPreferences
                         .getString("Remark$userId", null)
                         ?.takeIf { it.isNotBlank() }
-                        ?: "User $userId"
+                        ?: getString(R.string.default_user_name, userId)
             } catch (e: Exception) {
                 Log.e(TAG, "Error reading space remark: ${e.message}")
-                "User $userId"
+                getString(R.string.default_user_name, userId)
             }
 
             MaterialDialog(requireContext()).show {
@@ -668,7 +668,7 @@ class AppsFragment : Fragment() {
                         }
                     } catch (e: Exception) {
                         Log.e(TAG, "Error saving space remark: ${e.message}")
-                        requireContext().toast("Failed to save space remark: ${e.message}")
+                        requireContext().toast(getString(R.string.save_space_remark_failed, e.message))
                     }
                 }
                 positiveButton(res = R.string.done)

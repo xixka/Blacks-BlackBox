@@ -265,4 +265,24 @@
     <string name="restore_file_read_failed">Could not read the selected file</string>
     <string name="restore_signature_warning">signature differs from backup</string>
     <string name="restore_users_unavailable">Could not load the space list; apps will go back to the spaces recorded in the backup</string>
+
+    <!-- Extracted hardcoded UI text (MainActivity/AppsFragment/AppsAdapter/ListActivity/RestoreActivity/SettingFragment/FakeManagerActivity/GmsRepository/BlackBoxGalleryUserPicker) -->
+    <string name="storage_permission_required">Storage Permission Required</string>
+    <string name="storage_permission_message">This app needs \'All Files Access\' permission to properly run sandboxed apps. Without this permission, some apps may not work correctly.\n\nPlease grant permission in the next screen.</string>
+    <string name="storage_permission_grant">Grant Permission</string>
+    <string name="storage_permission_later">Later</string>
+    <string name="error_title">Error</string>
+    <string name="error_ok">OK</string>
+    <string name="error_init_failed">Failed to initialize app: %1$s</string>
+    <string name="default_user_name">User %1$d</string>
+    <string name="dialog_yes">Yes</string>
+    <string name="dialog_no">No</string>
+    <string name="save_space_remark_failed">Failed to save space remark: %1$s</string>
+    <string name="unknown_app">Unknown App</string>
+    <string name="vpn_permission_denied">VPN permission denied</string>
+    <string name="fake_location_missing_pkg">Fake location failed: missing target package</string>
+    <string name="install_self_blocked">Cannot install BlackBox app from within BlackBox. This would create infinite recursion and is not allowed for security reasons.</string>
+    <string name="install_exception_fail">Installation failed: %1$s</string>
+    <string name="uninstall_exception_fail">Uninstallation failed: %1$s</string>
+    <string name="clear_exception_fail">Clear failed: %1$s</string>
 </resources>

@@ -45,17 +45,19 @@ import java.util.concurrent.Executors
  * [BackupResult.failed]/[RestoreResult.failed]; global problems (insufficient space, wrong
  * password, corrupted archive, unsupported format) are thrown as [BackupException] subclasses.
  */
-class BackupManager private constructor() {
+/**
+ * One application selected for backup.
+ */
+data class BackupRequest(
+    val packageName: String,
+    val userId: Int,
+    /** Include data/app/{pkg}/base.apk + splits/ in the archive (default true). */
+    val includeApk: Boolean = true,
+    /** Exclude cache/ directories from data sections (default true, recorded in manifest). */
+    val excludeCache: Boolean = true,
+)
 
-    /** One application selected for backup. */
-    data class BackupRequest(
-        val packageName: String,
-        val userId: Int,
-        /** Include data/app/{pkg}/base.apk + splits/ in the archive (default true). */
-        val includeApk: Boolean = true,
-        /** Exclude cache/ directories from data sections (default true, recorded in manifest). */
-        val excludeCache: Boolean = true,
-    )
+class BackupManager private constructor() {
 
     private val executor = Executors.newSingleThreadExecutor { r ->
         Thread(r, "blackbox-backup").apply { isDaemon = false }

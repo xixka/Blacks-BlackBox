@@ -9,6 +9,7 @@ import java.io.File
 import top.niunaijun.blackbox.BlackBoxCore
 import top.niunaijun.blackbox.utils.AbiUtils
 import com.onebitmonochrome.blacksbbox.R
+import com.onebitmonochrome.blacksbbox.app.App
 import com.onebitmonochrome.blacksbbox.app.AppManager
 import com.onebitmonochrome.blacksbbox.bean.AppInfo
 import com.onebitmonochrome.blacksbbox.bean.InstalledAppBean
@@ -477,7 +478,7 @@ class AppsRepository {
                                             .getPackageArchiveInfo(file.absolutePath, 0)
                             if (packageInfo != null && packageInfo.packageName == hostPackageName) {
                                 resultLiveData.postValue(
-                                        "Cannot install BlackBox app from within BlackBox. This would create infinite recursion and is not allowed for security reasons."
+                                        getString(R.string.install_self_blocked)
                                 )
                                 return
                             }
@@ -515,7 +516,9 @@ class AppsRepository {
             scanUser()
         } catch (e: Exception) {
             Log.e(TAG, "Error installing APK: ${e.message}")
-            resultLiveData.postValue("Installation failed: ${e.message}")
+            resultLiveData.postValue(
+                    App.getContext().getString(R.string.install_exception_fail, e.message)
+            )
         }
     }
 
@@ -549,7 +552,9 @@ class AppsRepository {
             resultLiveData.postValue(getString(R.string.uninstall_success))
         } catch (e: Exception) {
             Log.e(TAG, "Error uninstalling APK: ${e.message}")
-            resultLiveData.postValue("Uninstallation failed: ${e.message}")
+            resultLiveData.postValue(
+                    App.getContext().getString(R.string.uninstall_exception_fail, e.message)
+            )
         }
     }
 
@@ -569,7 +574,9 @@ class AppsRepository {
             resultLiveData.postValue(getString(R.string.clear_success))
         } catch (e: Exception) {
             Log.e(TAG, "Error clearing APK data: ${e.message}")
-            resultLiveData.postValue("Clear failed: ${e.message}")
+            resultLiveData.postValue(
+                    App.getContext().getString(R.string.clear_exception_fail, e.message)
+            )
         }
     }
 

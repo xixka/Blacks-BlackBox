@@ -222,7 +222,7 @@ class RestoreActivity : LoadingActivity() {
                     Log.e(TAG, "Error reading remark for space ${user.id}: ${e.message}")
                     null
                 }
-                val fallback = user.name?.takeIf { it.isNotBlank() } ?: "User ${user.id}"
+                val fallback = user.name?.takeIf { it.isNotBlank() } ?: getString(R.string.default_user_name, user.id)
                 user.id to (remark ?: fallback)
             }
         } catch (e: Exception) {

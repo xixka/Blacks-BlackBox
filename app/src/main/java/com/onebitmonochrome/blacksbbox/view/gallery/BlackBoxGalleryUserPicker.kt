@@ -3,6 +3,7 @@ package com.onebitmonochrome.blacksbbox.view.gallery
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
 import com.onebitmonochrome.blacksbbox.R
+import com.onebitmonochrome.blacksbbox.app.App
 import com.onebitmonochrome.blacksbbox.app.AppManager
 import top.niunaijun.blackbox.BlackBoxCore
 import top.niunaijun.blackbox.core.system.user.BUserInfo
@@ -33,13 +34,13 @@ object BlackBoxGalleryUserPicker {
     fun subtitleForUser(userId: Int): String {
         return AppManager.mRemarkSharedPreferences.getString("Remark$userId", null)
             ?.takeIf { it.isNotBlank() }
-            ?: "User $userId"
+            ?: App.getContext().getString(R.string.default_user_name, userId)
     }
 
     private fun labelForUser(user: BUserInfo): String {
         val remark = AppManager.mRemarkSharedPreferences.getString("Remark${user.id}", null)
             ?.takeIf { it.isNotBlank() }
-        val fallbackName = user.name?.takeIf { it.isNotBlank() } ?: "User ${user.id}"
+        val fallbackName = user.name?.takeIf { it.isNotBlank() } ?: App.getContext().getString(R.string.default_user_name, user.id)
         return if (remark != null && remark != fallbackName) {
             "$remark ($fallbackName)"
         } else {

@@ -43,6 +43,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import top.niunaijun.blackbox.BlackBoxCore
 import top.niunaijun.blackbox.backup.BackupManager
+import top.niunaijun.blackbox.backup.BackupRequest
 import top.niunaijun.blackbox.backup.BackupResult
 import top.niunaijun.blackbox.backup.HostPrefs
 import top.niunaijun.blackbox.backup.OnBackupProgressListener

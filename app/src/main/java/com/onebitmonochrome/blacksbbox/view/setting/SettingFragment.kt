@@ -40,7 +40,7 @@ class SettingFragment : PreferenceFragmentCompat() {
                 } else {
                     AppManager.mBlackBoxLoader.invalidUseVpnNetwork(false)
                     vpnPref.isChecked = false
-                    toast("VPN permission denied")
+                    toast(R.string.vpn_permission_denied)
                 }
             }
 

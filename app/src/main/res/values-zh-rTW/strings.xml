@@ -143,4 +143,157 @@
     <string name="restore_file_read_failed">無法讀取所選檔案</string>
     <string name="restore_signature_warning">簽章與備份不一致</string>
     <string name="restore_users_unavailable">空間清單載入失敗，應用程式將還原到備份中記錄的空間</string>
+
+    <!-- 補齊缺失翻譯（與 values/strings.xml 鍵集對齊） -->
+    <string name="fake_location_pick">選擇虛擬定位點</string>
+    <string name="device_spoofing">裝置偽裝</string>
+
+    <string name="blackbox_gallery_title">Black\'s BlackBox 相簿</string>
+    <string name="blackbox_gallery_menu">Black\'s BlackBox 相簿</string>
+    <string name="blackbox_gallery_choose_user">選擇 Black\'s BlackBox 使用者</string>
+    <string name="blackbox_gallery_refresh">重新整理</string>
+    <string name="blackbox_gallery_open_guest">開啟訪客應用程式</string>
+    <string name="blackbox_gallery_delete">刪除</string>
+    <string name="blackbox_gallery_empty">尚未匯入任何媒體。</string>
+    <string name="blackbox_gallery_importing">正在匯入 Black\'s BlackBox 相簿…</string>
+    <string name="blackbox_gallery_import_empty">沒有媒體被分享至 Black\'s BlackBox</string>
+    <string name="blackbox_gallery_import_failed">匯入失敗</string>
+    <string name="blackbox_gallery_imported_count">已將 %1$d 個項目匯入 Black\'s BlackBox 相簿</string>
+    <string name="blackbox_gallery_open_guest_failed">無法開啟訪客相簿應用程式</string>
+    <string name="blackbox_gallery_item_missing">此媒體項目已無法使用</string>
+    <string name="blackbox_gallery_delete_failed">無法刪除此媒體項目</string>
+    <string name="blackbox_gallery_share_to_app">分享至應用程式</string>
+    <string name="blackbox_gallery_share_no_targets">Black\'s BlackBox 內沒有應用程式可以接收此媒體</string>
+    <string name="blackbox_gallery_share_failed">無法分享此媒體</string>
+    <string name="blackbox_gallery_share_label">傳送至 Black\'s BlackBox 相簿</string>
+    <string name="blackbox_gallery_video_badge">影片</string>
+
+    <string name="device_spoofing_summary">變更目前 Black\'s BlackBox 空間對外顯示的裝置識別。這些數值僅保存在容器內部，僅對此空間中啟動的應用程式生效。</string>
+    <string name="device_spoofing_manufacturer">裝置製造商</string>
+    <string name="device_spoofing_model">裝置型號</string>
+    <string name="device_spoofing_android_id">Android ID</string>
+    <string name="device_spoofing_accept_change">套用變更</string>
+    <string name="device_spoofing_reset_to_default">重設為預設值</string>
+    <string name="device_spoofing_samsung_preset">三星</string>
+    <string name="device_spoofing_saved">已為此空間更新裝置偽裝</string>
+    <string name="device_spoofing_reset">已還原 Black\'s BlackBox 預設裝置數值</string>
+    <string name="device_spoofing_samsung_loaded">已載入三星 Galaxy S26+ 數值。點擊「套用變更」即可儲存。</string>
+    <string name="device_spoofing_invalid_android_id">Android ID 必須為 16 位十六進位字元</string>
+    <string name="device_spoofing_fill_required">必須填寫裝置製造商與裝置型號</string>
+
+    <string name="app_freeze_options">凍結選項</string>
+    <string name="app_freeze_options_hint">離開 BlackBox 後，是否讓 %s 不被自動凍結？</string>
+    <string name="app_freeze_now">立即凍結</string>
+    <string name="app_exclude_from_auto_freeze">將此應用程式排除在自動凍結之外</string>
+    <string name="app_excluded_from_auto_freeze_enabled">此應用程式將不會被自動凍結</string>
+    <string name="app_excluded_from_auto_freeze_disabled">此應用程式將恢復正常自動凍結</string>
+    <string name="app_is_frozen">%s 已被凍結</string>
+
+    <string name="shealth_login_fallback_enable">啟用三星登入備援機制</string>
+    <string name="shealth_login_fallback_disable">停用三星登入備援機制</string>
+    <string name="shealth_login_fallback_dialog_title">Samsung Health 登入備援機制</string>
+    <string name="shealth_login_fallback_dialog_message">啟用備用登入途徑，開啟手機上的 Samsung Account 應用程式（BlackBox 之外）。預設行為仍在 BlackBox 內完成登入，應使用瀏覽器方式。</string>
+    <string name="shealth_login_fallback_enabled">已為此應用程式啟用三星登入備援機制</string>
+    <string name="shealth_login_fallback_disabled">已為此應用程式停用三星登入備援機制</string>
+
+    <string name="apk_install_share_label">安裝至 Black\'s BlackBox</string>
+    <string name="apk_install_importing">正在將 APK 安裝至 Black\'s BlackBox…</string>
+    <string name="apk_install_import_empty">沒有 APK 被分享至 Black\'s BlackBox</string>
+    <string name="apk_install_import_failed">APK 安裝失敗</string>
+    <string name="apk_install_imported_count">已安裝 %1$d 個 APK</string>
+
+    <string name="use_vpn_network">使用 VPN 網路</string>
+    <string name="use_vpn_network_summary">為沙盒中的應用程式透過 VPN 轉送流量（可能改善網路連線）</string>
+    <string name="vpn_not_supported_android14">Android 14 以上版本不支援 VPN 模式</string>
+
+    <string name="disable_flag_secure">停用 Flag Secure</string>
+    <string name="disable_flag_secure_summary">允許在應用程式內截圖與錄製螢幕</string>
+
+    <string name="dark_mode">深色模式</string>
+    <string name="dark_mode_summary">為宿主介面使用深色主題</string>
+
+    <string name="freeze_app_instantly_title">即時凍結應用程式</string>
+    <string name="freeze_app_instantly_summary">為執行中的應用程式新增一個小型凍結按鈕。</string>
+    <string name="freeze_app_instantly_dialog_title">即時凍結應用程式</string>
+    <string name="freeze_app_instantly_dialog_message">為執行中的應用程式新增專屬凍結按鈕，你可以隨時立即停止並凍結它們。可以把它想像成 Instagram 的一鍵關停按鈕，終結無止盡的滑個不停。</string>
+
+    <string name="auto_freeze_toggle_button">切換自動凍結</string>
+    <string name="auto_freeze_toggle_title">要啟用自動凍結嗎？</string>
+    <string name="auto_freeze_toggle_message">此按鈕允許 Black\'s BlackBox 在你離開時凍結任意應用程式與任意畫面。要啟用嗎？</string>
+    <string name="auto_freeze_toggle_on">自動凍結已啟用</string>
+    <string name="auto_freeze_toggle_off">自動凍結已停用</string>
+    <string name="auto_freeze_master_enabled">離開 Black\'s BlackBox 時將自動凍結應用程式</string>
+    <string name="auto_freeze_master_disabled">自動凍結已關閉</string>
+
+    <string name="host_signing_fallback_title">部分應用程式備援機制</string>
+    <string name="host_signing_fallback_summary">允許宿主與 Black\'s BlackBox 通訊</string>
+    <string name="host_signing_fallback_dialog_title">部分應用程式備援機制</string>
+    <string name="host_signing_fallback_dialog_message">啟用後，某些套件檢查可能會附帶真實的宿主簽章/憑證資料，以提升較新 Android 版本上的相容性。這會向要求簽章資訊的應用程式暴露宿主簽章，進而降低沙盒的隱私性。僅在應用程式無法啟動或出現 Google/Meta 憑證錯誤時才啟用。</string>
+
+    <string name="enable">啟用</string>
+    <string name="enable_gms_warning">警告！啟用此功能也可能使原本正常的應用程式出現問題！事後停用也無濟於事！請謹慎操作，建議為 Play Store 應用程式與服務使用不同的空間！</string>
+
+    <string name="wipe_gms">清除 GMS</string>
+    <string name="wipe_gms_hint">這將徹底清除 Google Play 及其所有已安裝的附加元件。</string>
+
+    <string name="send_logs_title">傳送日誌</string>
+    <string name="send_logs_summary">產生偵錯日誌並分享給任意應用程式</string>
+
+    <string name="about_title">關於</string>
+    <string name="about_owner_title">Black00Z - Black\'s BlackBox</string>
+    <string name="about_owner_summary">作者與維護者</string>
+    <string name="about_link_summary">點擊開啟開源地址</string>
+
+    <string name="about_main_base_title">主專案 / 目前基底</string>
+    <string name="about_main_base_summary">Fork 淵源與目前基底</string>
+    <string name="about_newblackbox_title">ALEX5402 - NewBlackbox</string>
+    <string name="about_newblackbox_summary">@string/about_link_summary</string>
+
+    <string name="about_framework_base_title">框架基底 / 核心架構</string>
+    <string name="about_framework_base_summary">核心虛擬化架構源頭</string>
+    <string name="about_virtualapp_title">asLody - VirtualApp</string>
+    <string name="about_virtualapp_summary">@string/about_link_summary</string>
+    <string name="about_virtualapk_title">didi - VirtualAPK</string>
+    <string name="about_virtualapk_summary">@string/about_link_summary</string>
+
+    <string name="about_native_hooking_title">Native Hook / 載入器</string>
+    <string name="about_native_hooking_summary">Native 補丁與載入器內部實作</string>
+    <string name="about_dobby_title">jmpews - Dobby</string>
+    <string name="about_dobby_summary">@string/about_link_summary</string>
+    <string name="about_xdl_title">hexhacking - xDL</string>
+    <string name="about_xdl_summary">@string/about_link_summary</string>
+
+    <string name="about_reflection_title">反射 / 存取輔助工具</string>
+    <string name="about_reflection_summary">反射與隱藏 API 存取輔助</string>
+    <string name="about_blackreflection_title">CodingGay - BlackReflection</string>
+    <string name="about_blackreflection_summary">@string/about_link_summary</string>
+    <string name="about_freereflection_title">tiann - FreeReflection</string>
+    <string name="about_freereflection_summary">@string/about_link_summary</string>
+
+    <string name="about_ai_note_title">建置說明</string>
+    <string name="about_ai_note_summary">由既有程式碼與 AI 共同完成。</string>
+
+    <string name="share_logs_chooser_title">分享偵錯日誌</string>
+    <string name="share_logs_preparing">正在準備日誌…</string>
+    <string name="share_logs_failed">準備日誌失敗</string>
+
+    <!-- 硬編碼 UI 文案外提 -->
+    <string name="storage_permission_required">需要儲存權限</string>
+    <string name="storage_permission_message">本應用程式需要「所有檔案存取」權限才能正常執行沙盒內的應用程式。缺少此權限時，部分應用程式可能無法正常運作。\n\n請在下一個畫面授予權限。</string>
+    <string name="storage_permission_grant">授予權限</string>
+    <string name="storage_permission_later">稍後</string>
+    <string name="error_title">錯誤</string>
+    <string name="error_ok">確定</string>
+    <string name="error_init_failed">應用程式初始化失敗：%1$s</string>
+    <string name="default_user_name">使用者 %1$d</string>
+    <string name="dialog_yes">是</string>
+    <string name="dialog_no">否</string>
+    <string name="save_space_remark_failed">無法儲存空間備註：%1$s</string>
+    <string name="unknown_app">未知應用程式</string>
+    <string name="vpn_permission_denied">VPN 權限遭拒絕</string>
+    <string name="fake_location_missing_pkg">虛擬定位失敗：缺少目標應用程式</string>
+    <string name="install_self_blocked">無法在 BlackBox 內安裝 BlackBox 應用程式。這會造成無限遞迴，基於安全原因不允許此操作。</string>
+    <string name="install_exception_fail">安裝失敗：%1$s</string>
+    <string name="uninstall_exception_fail">卸載失敗：%1$s</string>
+    <string name="clear_exception_fail">清除失敗：%1$s</string>
 </resources>

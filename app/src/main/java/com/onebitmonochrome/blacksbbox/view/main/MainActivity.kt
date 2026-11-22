@@ -74,7 +74,7 @@ class MainActivity : LoadingActivity() {
         } catch (e: Exception) {
             Log.e(TAG, "Critical error in onCreate: ${e.message}")
 
-            showErrorDialog("Failed to initialize app: ${e.message}")
+            showErrorDialog(getString(R.string.error_init_failed, e.message))
         }
     }
 
@@ -155,13 +155,10 @@ class MainActivity : LoadingActivity() {
     private fun showStoragePermissionDialog() {
         try {
             MaterialDialog(this).show {
-                title(text = "Storage Permission Required")
-                message(
-                        text =
-                                "This app needs 'All Files Access' permission to properly run sandboxed apps. Without this permission, some apps may not work correctly.\n\nPlease grant permission in the next screen."
-                )
-                positiveButton(text = "Grant Permission") { openAllFilesAccessSettings() }
-                negativeButton(text = "Later") { Log.w(TAG, "User postponed storage permission") }
+                title(text = getString(R.string.storage_permission_required))
+                message(text = getString(R.string.storage_permission_message))
+                positiveButton(text = getString(R.string.storage_permission_grant)) { openAllFilesAccessSettings() }
+                negativeButton(text = getString(R.string.storage_permission_later)) { Log.w(TAG, "User postponed storage permission") }
                 cancelable(false)
             }
         } catch (e: Exception) {
@@ -272,9 +269,9 @@ class MainActivity : LoadingActivity() {
     private fun showErrorDialog(message: String) {
         try {
             MaterialDialog(this).show {
-                title(text = "Error")
+                title(text = getString(R.string.error_title))
                 message(text = message)
-                positiveButton(text = "OK") { finish() }
+                positiveButton(text = getString(R.string.error_ok)) { finish() }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error showing error dialog: ${e.message}")
@@ -413,10 +410,10 @@ class MainActivity : LoadingActivity() {
                     AppManager.mRemarkSharedPreferences
                             .getString("Remark${user.id}", null)
                             ?.takeIf { it.isNotBlank() }
-                            ?: "User ${user.id}"
+                            ?: getString(R.string.default_user_name, user.id)
                 } catch (e: Exception) {
                     Log.e(TAG, "Error reading remark for space ${user.id}: ${e.message}")
-                    "User ${user.id}"
+                    getString(R.string.default_user_name, user.id)
                 }
             }.toTypedArray()
 

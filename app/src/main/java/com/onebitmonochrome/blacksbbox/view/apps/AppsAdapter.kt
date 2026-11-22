@@ -7,6 +7,7 @@ import android.widget.ImageView
 import cbfg.rvadapter.RVHolder
 import cbfg.rvadapter.RVHolderFactory
 import com.onebitmonochrome.blacksbbox.R
+import com.onebitmonochrome.blacksbbox.app.App
 import com.onebitmonochrome.blacksbbox.app.AppManager
 import com.onebitmonochrome.blacksbbox.bean.AppInfo
 import com.onebitmonochrome.blacksbbox.databinding.ItemAppBinding
@@ -37,10 +38,10 @@ class AppsAdapter : RVHolderFactory() {
                 val remark = AppManager.mRemarkSharedPreferences
                         .getString("Remark$userId", null)
                         ?.takeIf { it.isNotBlank() }
-                remark ?: "User $userId"
+                remark ?: App.getContext().getString(R.string.default_user_name, userId)
             } catch (e: Exception) {
                 Log.e(TAG, "Error resolving user tag for userId=$userId: ${e.message}")
-                "User $userId"
+                App.getContext().getString(R.string.default_user_name, userId)
             }
         }
     }
@@ -80,7 +81,7 @@ class AppsAdapter : RVHolderFactory() {
             try {
                 setIconSafely(item.icon, item.packageName)
 
-                binding.name.text = item.name ?: "Unknown App"
+                binding.name.text = item.name ?: App.getContext().getString(R.string.unknown_app)
 
                 // Small tag under the app name identifying the space this app lives in.
                 binding.userTag.text = resolveUserTag(item.userId)
@@ -149,7 +150,7 @@ class AppsAdapter : RVHolderFactory() {
         private fun setSafeDefaults() {
             try {
                 binding.icon.setImageDrawable(createDefaultIcon())
-                binding.name.text = "Unknown App"
+                binding.name.text = App.getContext().getString(R.string.unknown_app)
                 binding.userTag.text = resolveUserTag(0)
                 binding.cornerLabel.visibility = View.INVISIBLE
             } catch (e: Exception) {
@@ -164,7 +165,7 @@ class AppsAdapter : RVHolderFactory() {
         override fun setContent(item: AppInfo, isSelected: Boolean, payload: Any?) {
             try {
                 binding.icon.setImageDrawable(ColorDrawable(DEFAULT_ICON_COLOR))
-                binding.name.text = item.name ?: "Unknown App"
+                binding.name.text = item.name ?: App.getContext().getString(R.string.unknown_app)
                 binding.userTag.text = resolveUserTag(item.userId)
                 binding.cornerLabel.visibility = View.INVISIBLE
             } catch (e: Exception) {

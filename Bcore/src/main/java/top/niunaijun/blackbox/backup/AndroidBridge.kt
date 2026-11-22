@@ -150,7 +150,7 @@ class AndroidInstallBridge : InstallBridge {
      */
     override fun isProcessAlive(packageName: String, userId: Int): Boolean = try {
         val am = BlackBoxCore.getContext().getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        val processes = am.runningAppProcesses ?: return false
+        val processes = am.runningAppProcesses ?: emptyList()
         processes.any { info ->
             val name = info.processName ?: return@any false
             name == packageName || name.startsWith("$packageName:") || name.startsWith("$packageName.")
@@ -217,7 +217,6 @@ object OsSymlinkSupport : SymlinkSupport {
         false
     }
 
-    companion object {
-        const val TAG = "Restore"
-    }
+
+    private const val TAG = "Restore"
 }

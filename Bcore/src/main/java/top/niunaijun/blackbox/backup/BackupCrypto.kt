@@ -15,6 +15,7 @@
  */
 package top.niunaijun.blackbox.backup
 
+import top.niunaijun.blackbox.backup.exception.VerifyException
 import top.niunaijun.blackbox.backup.exception.WrongPasswordException
 import java.io.IOException
 import java.io.InputStream

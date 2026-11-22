@@ -39,6 +39,7 @@ inspiration/
 # Markdown notes and local instructions
 *.md
 !README.md
+!AGENTS.md
 !docs/**
 
 # CI workflows and format research docs are deliverables, keep them tracked

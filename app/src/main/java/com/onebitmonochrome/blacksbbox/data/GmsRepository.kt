@@ -3,6 +3,7 @@ package com.onebitmonochrome.blacksbbox.data
 import androidx.lifecycle.MutableLiveData
 import top.niunaijun.blackbox.BlackBoxCore
 import com.onebitmonochrome.blacksbbox.R
+import com.onebitmonochrome.blacksbbox.app.App
 import com.onebitmonochrome.blacksbbox.app.AppManager
 import com.onebitmonochrome.blacksbbox.bean.GmsBean
 import com.onebitmonochrome.blacksbbox.bean.GmsInstallBean
@@ -18,7 +19,10 @@ class GmsRepository {
         BlackBoxCore.get().users.forEach {
             val userId = it.id
             val userName =
-                AppManager.mRemarkSharedPreferences.getString("Remark$userId", "User $userId") ?: ""
+                AppManager.mRemarkSharedPreferences.getString(
+                    "Remark$userId",
+                    App.getContext().getString(R.string.default_user_name, userId)
+                ) ?: ""
             val isInstalled = BlackBoxCore.get().isInstallGms(userId)
             val hasTraces = BlackBoxCore.get().hasGmsTraces(userId)
             val bean = GmsBean(userId, userName, isInstalled, hasTraces)

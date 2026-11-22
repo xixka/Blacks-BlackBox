@@ -21,7 +21,7 @@ import top.niunaijun.blackbox.backup.exception.BackupException
  * Entry-level merger for configuration files (blackbox-backup v1).
  *
  * REAL conf format note (verified against engine sources):
- * Every system/*.conf managed by this fork (user.conf, accounts.conf, uid.conf,
+ * Every system conf file managed by this fork (user.conf, accounts.conf, uid.conf,
  * shared-user.conf, fake-location.conf) is a BINARY Android Parcel file, NOT a text file:
  *  - user.conf         : Parcel.writeTypedList(ArrayList<BUserInfo>)     (BUserManagerService)
  *  - uid.conf          : Parcel.writeInt(mCurrUid) + Parcel.writeMap(pkg -> appId) (Settings)

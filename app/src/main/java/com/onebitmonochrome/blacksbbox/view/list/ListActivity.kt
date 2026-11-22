@@ -110,10 +110,10 @@ class ListActivity : BaseActivity() {
                     AppManager.mRemarkSharedPreferences
                             .getString("Remark${user.id}", null)
                             ?.takeIf { it.isNotBlank() }
-                            ?: "User ${user.id}"
+                            ?: getString(R.string.default_user_name, user.id)
                 } catch (e: Exception) {
                     Log.e(TAG, "Error reading remark for space ${user.id}: ${e.message}")
-                    "User ${user.id}"
+                    getString(R.string.default_user_name, user.id)
                 }
             }
 

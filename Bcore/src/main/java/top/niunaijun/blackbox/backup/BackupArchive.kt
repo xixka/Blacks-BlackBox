@@ -21,6 +21,7 @@ import top.niunaijun.blackbox.backup.exception.WrongPasswordException
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.zip.ZipEntry

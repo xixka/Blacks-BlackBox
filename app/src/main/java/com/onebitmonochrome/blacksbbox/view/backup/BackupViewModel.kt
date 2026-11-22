@@ -91,9 +91,10 @@ object BackupUiLogic {
 
     /** True when [text] is exactly [YLB_MNEMONIC_WORD_COUNT] whitespace-separated words. */
     fun hasValidYlbMnemonicWordCount(text: String): Boolean {
-        val words = text.trim().split(Regex("\s+"))
+        val words = text.trim().split(Regex("\\s+"))
         return words.size == YLB_MNEMONIC_WORD_COUNT && words.all { it.isNotBlank() }
     }
+
     const val FROZEN_VALUE_TRUE = "true"
     const val KEY_NOTE_SPACE_PREFIX = "note:space:"
     const val BACKUP_FILE_PREFIX = "blackbox_backup_"

@@ -93,7 +93,7 @@ object BackupTestSupport {
             File(vr, "data/app/$pkg/base.apk").writeBytes(ByteArray(2048) { (it % 251).toByte() })
         }
         if (evr != null) {
-            File(evr, "storage/emulated/$userId/Android/data/$pkg").mkdirs()
+            File(evr, "storage/emulated/$userId/Android/data/$pkg/files").mkdirs()
             File(evr, "storage/emulated/$userId/Android/data/$pkg/files/ext.txt").writeText("external")
             File(evr, "storage/emulated/$userId/Android/obb/$pkg").mkdirs()
             File(evr, "storage/emulated/$userId/Android/obb/$pkg/main.obb").writeBytes(ByteArray(128) { 7 })

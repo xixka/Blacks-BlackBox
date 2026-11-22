@@ -60,7 +60,7 @@ class ConfMergerTest {
         assertTrue(merged.contains("pkg.com.bar.flags = multiuser"))
         // ...comments survive...
         assertTrue(merged.contains("# user conf entries (sample in the documented key=value text form)"))
-        // ...and backup-only entries of the selected keys are appended.
+        // ...and backup-only entries are appended (restore adds everything the backup carries).
         assertTrue(merged.contains("pkg.com.new.appid = 10045"))
     }
 

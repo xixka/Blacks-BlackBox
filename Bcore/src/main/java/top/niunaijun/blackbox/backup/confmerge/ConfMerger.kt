@@ -162,8 +162,10 @@ class TextLineConfCodec : ConfCodec {
                     val eq = trimmed.indexOf('=')
                     if (eq > 0) {
                         val key = trimmed.substring(0, eq).trim()
+                        // Every key present in the target is marked as seen so the append
+                        // pass below never duplicates a line that is already in the file.
+                        seen.add(key)
                         if (key in wanted && backupEntries.containsKey(key)) {
-                            seen.add(key)
                             out.append(key).append(" = ").append(backupEntries[key]).append('\n')
                             handled = true
                         }
@@ -173,9 +175,11 @@ class TextLineConfCodec : ConfCodec {
                     out.append(line).append('\n')
                 }
             }
-            // Backup-only keys get appended in backup order.
+            // Backup-only keys get appended in backup order, regardless of [keysToRestore]:
+            // the restore adds everything the backup carries, while the in-place override
+            // above stays restricted to the selected keys (other spaces remain untouched).
             for ((key, value) in backupEntries) {
-                if (key in wanted && seen.add(key)) {
+                if (seen.add(key)) {
                     appended.add("$key = $value")
                 }
             }

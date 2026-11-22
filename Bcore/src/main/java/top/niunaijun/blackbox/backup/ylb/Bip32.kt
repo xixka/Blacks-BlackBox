@@ -78,9 +78,10 @@ object Bip32 {
     fun ckdPriv(parent: Node, index: Int, hardened: Boolean): Node? {
         // Non-hardened indices use the low 31 bits; the hardened flag is passed separately.
         require(index >= 0) { "index out of range: $index" }
+        require(index < 0x80000000.toInt()) { "index out of range: $index" }
         val data = ByteArray(37)
         if (hardened) {
-            // ser256(k_par) with a leading 0x00 marker + ser32(index).
+            // ser256(k_par) with a leading 0x00 marker + ser32(index + 2^31).
             val keyBytes = bigIntegerTo32Bytes(parent.key)
             System.arraycopy(keyBytes, 0, data, 1, 32)
         } else {
@@ -88,7 +89,8 @@ object Bip32 {
             val compressed = compressedPublicKey(parent.key)
             System.arraycopy(compressed, 0, data, 0, 33)
         }
-        writeInt32(data, 33, index)
+        // ser32(i): hardened derivation writes the index with bit 31 set (BIP32 spec).
+        writeInt32(data, 33, if (hardened) index or HARDENED_BIT else index)
         val i = hmacSha512(parent.chainCode, data)
         val il = BigInteger(1, i.copyOfRange(0, 32))
         if (!isValidScalar(il)) return null

@@ -211,8 +211,9 @@ class BackupArchiveTest {
         // The naive scheme would map com.a.b-c and com.a.b_c to the same name; ours must not.
         val dash = BackupArchive.escapePkg("com.a.b-c")
         val underscore = BackupArchive.escapePkg("com.a.b_c")
-        assertEquals("com.a.b_2d_", dash)
-        assertEquals("com.a.b_5f_", underscore)
+        // '-' -> "_2d_", '_' -> "_5f_", all other chars pass through (reversible).
+        assertEquals("com.a.b_2d_c", dash)
+        assertEquals("com.a.b_5f_c", underscore)
         assertTrue(dash != underscore)
 
         // Literal '_' is escaped, so sequences like _2d_ cannot be forged.

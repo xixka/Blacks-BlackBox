@@ -241,7 +241,7 @@ class BackupActivity : LoadingActivity() {
         }
     }
 
-    private fun buildRequests(): List<BackupManager.BackupRequest> {
+    private fun buildRequests(): List<BackupRequest> {
         val includeApk = viewBinding.includeApkSwitch.isChecked
         val excludeCache = viewBinding.excludeCacheSwitch.isChecked
         return if (isSingleMode) {
@@ -249,11 +249,11 @@ class BackupActivity : LoadingActivity() {
             if (targetPkg.isBlank()) {
                 emptyList()
             } else {
-                listOf(BackupManager.BackupRequest(targetPkg, userId, includeApk, excludeCache))
+                listOf(BackupRequest(targetPkg, userId, includeApk, excludeCache))
             }
         } else {
             backupAdapter.selectedApps().map {
-                BackupManager.BackupRequest(it.packageName, it.userId, includeApk, excludeCache)
+                BackupRequest(it.packageName, it.userId, includeApk, excludeCache)
             }
         }
     }
@@ -347,7 +347,7 @@ class BackupActivity : LoadingActivity() {
      * Must be called off the main thread (SharedPreferences/BlackBoxCore access).
      */
     private fun collectHostPrefs(
-            requests: List<BackupManager.BackupRequest>,
+            requests: List<BackupRequest>,
     ): HostPrefs {
         val sortRaw = try {
             AppManager.mRemarkSharedPreferences.getString(AppsSortKeys.GLOBAL_SORT_KEY, null)

@@ -9,10 +9,13 @@ constraintlayout = "2.2.0"
 kotlin = "1.9.23"
 coreKtx = "1.15.0"
 gson = "2.10.1"
+# WinZip AES encrypted zip reader/writer for the Meta Wolf (ylb) backup importer (Apache-2.0)
+zip4j = "2.11.5"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+zip4j = { group = "net.lingala.zip4j", name = "zip4j", version.ref = "zip4j" }
 kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

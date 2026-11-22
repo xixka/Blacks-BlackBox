@@ -98,6 +98,9 @@ dependencies {
     implementation libs.kotlin.stdlib
     implementation libs.gson
 
+    // ylb importer (top.niunaijun.blackbox.backup.ylb): WinZip AES zip read/write (Apache-2.0)
+    implementation libs.zip4j
+
     // pure-JVM unit tests for the backup engine
     testImplementation libs.junit
 }

@@ -297,4 +297,15 @@
     <string name="install_exception_fail">安装失败：%1$s</string>
     <string name="uninstall_exception_fail">卸载失败：%1$s</string>
     <string name="clear_exception_fail">清除失败：%1$s</string>
+    <string name="ylb_detected_title">元萝卜备份</string>
+    <string name="ylb_detected_message">检测到元萝卜（Meta Wolf）备份。导入需要源设备上创建该备份时使用的 12 词助记词身份（若设置了密码还需密码）。</string>
+    <string name="ylb_mnemonic_hint">12 词助记词（空格分隔）</string>
+    <string name="ylb_password_hint">身份密码（未设置则留空）</string>
+    <string name="ylb_word_count_invalid">助记词需要正好 12 个英文单词</string>
+    <string name="ylb_target_space_title">选择导入目标空间</string>
+    <string name="ylb_new_space">新建空间</string>
+    <string name="ylb_wrong_password">助记词或密码不正确（第 %1$d 次尝试）</string>
+    <string name="ylb_import_failed_generic">导入失败：%1$s</string>
+    <string name="ylb_unknown_entries">%1$d 个无法识别归属的条目已跳过（不参与导入）</string>
+    <string name="ylb_done">元萝卜备份导入完成</string>
 </resources>

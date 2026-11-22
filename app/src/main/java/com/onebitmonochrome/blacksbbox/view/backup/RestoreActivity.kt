@@ -51,6 +51,8 @@ import top.niunaijun.blackbox.backup.HostPrefs
 import top.niunaijun.blackbox.backup.OnRestoreProgressListener
 import top.niunaijun.blackbox.backup.RestoreResult
 import top.niunaijun.blackbox.backup.exception.WrongPasswordException
+import top.niunaijun.blackbox.backup.ylb.YlbBackupParser
+import top.niunaijun.blackbox.backup.ylb.exception.YlbFormatException
 import java.io.File
 import java.io.IOException
 
@@ -84,6 +86,12 @@ class RestoreActivity : LoadingActivity() {
     private var passwordAttemptsUsed = 0
     private var pendingPassword: CharArray? = null
     private var isRunning = false
+
+    /** Picked archive awaiting Meta Wolf (YLB) mnemonic entry, plus retry counter. */
+    private var ylbSourceFile: File? = null
+    private var ylbAttemptsUsed = 0
+    private var ylbPendingMnemonic: CharArray? = null
+    private var ylbPendingPassword: CharArray? = null
 
     private var progressDialog: AlertDialog? = null
     private var progressBinding: ViewBackupProgressBinding? = null
@@ -152,6 +160,23 @@ class RestoreActivity : LoadingActivity() {
                 var parseError: Throwable? = null
                 try {
                     val file = withContext(Dispatchers.IO) { copyToCache(uri) }
+
+                    // Meta Wolf (YLB) archives have no plaintext manifest: sniff first so the
+                    // mnemonic dialog can take over instead of a "corrupted file" error.
+                    val ylbInfo = withContext(Dispatchers.IO) { YlbBackupParser.sniff(file) }
+                    val looksYlb = (ylbInfo.isYlbBackup ||
+                            ylbInfo.confidence == YlbBackupParser.Confidence.CANDIDATE) &&
+                            !ylbInfo.looksLikeBlackBoxV1
+                    if (looksYlb) {
+                        Log.i(TAG, "Meta Wolf backup detected: ${ylbInfo.reasons}")
+                        ylbSourceFile = file
+                        withContext(Dispatchers.Main) {
+                            hideLoading()
+                            showYlbMnemonicDialog()
+                        }
+                        return@launch
+                    }
+
                     val parsed = withContext(Dispatchers.IO) { parseArchive(file) }
                     // Only keep the file once the manifest parsed: a stale manifest must
                     // never be paired with a different archive.
@@ -367,6 +392,189 @@ class RestoreActivity : LoadingActivity() {
         } catch (e: Exception) {
             Log.e(TAG, "Error showing password dialog: ${e.message}")
             toast(getString(R.string.backup_error_generic, e.message ?: ""))
+        }
+    }
+
+    // =========================================================================================
+    // Meta Wolf (YLB) backup import flow: sniff -> mnemonic dialog -> target space ->
+    // parse/convert to blackbox-backup v1 -> engine restore. See docs/ylb-format/RESEARCH.md.
+    // =========================================================================================
+
+    /** Mnemonic + (optional) identity password prompt for a detected Meta Wolf archive. */
+    private fun showYlbMnemonicDialog() {
+        try {
+            val file = ylbSourceFile
+            if (file == null || !file.isFile) {
+                Log.e(TAG, "YLB import aborted: source file is missing")
+                return
+            }
+            if (isRunning) {
+                Log.w(TAG, "YLB import already running; ignoring dialog re-entry")
+                return
+            }
+            ylbPendingMnemonic = null
+            ylbPendingPassword = null
+            MaterialDialog(this).show {
+                title(res = R.string.ylb_detected_title)
+                message(text = getString(R.string.ylb_detected_message))
+                input(
+                        hintRes = R.string.ylb_mnemonic_hint,
+                        allowEmpty = false,
+                        inputType = InputType.TYPE_CLASS_TEXT,
+                ) { _, text ->
+                    ylbPendingMnemonic = text.toString().trim().toCharArray()
+                }
+                input(
+                        hintRes = R.string.ylb_password_hint,
+                        allowEmpty = true,
+                        inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD,
+                ) { _, text ->
+                    ylbPendingPassword = if (text.isNullOrBlank()) null else text.toString().toCharArray()
+                }
+                positiveButton(res = R.string.done) {
+                    val mnemonic = ylbPendingMnemonic
+                    if (mnemonic == null ||
+                            !BackupUiLogic.hasValidYlbMnemonicWordCount(String(mnemonic))) {
+                        toast(R.string.ylb_word_count_invalid)
+                        showYlbMnemonicDialog()
+                        return@positiveButton
+                    }
+                    val password = ylbPendingPassword
+                    startYlbImport(mnemonic, password)
+                }
+                negativeButton(res = R.string.cancel) {
+                    Log.i(TAG, "YLB import canceled by user")
+                    ylbSourceFile = null
+                    ylbPendingMnemonic?.fill('\u0000')
+                    ylbPendingMnemonic = null
+                    ylbPendingPassword?.fill('\u0000')
+                    ylbPendingPassword = null
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error showing YLB mnemonic dialog: ${e.message}")
+            toast(getString(R.string.backup_error_generic, e.message ?: ""))
+        }
+    }
+
+    /** Picks the target space for the imported identity, then starts the import. */
+    private fun startYlbImport(mnemonic: CharArray, password: CharArray?) {
+        try {
+            val spaces = loadSpaces()
+            val labels = mutableListOf<String>()
+            val ids = mutableListOf<Int>()
+            spaces.forEach { (id, label) ->
+                labels.add(label)
+                ids.add(id)
+            }
+            labels.add(getString(R.string.ylb_new_space))
+            ids.add((spaces.maxOfOrNull { it.first } ?: -1) + 1)
+
+            AlertDialog.Builder(this)
+                    .setTitle(R.string.ylb_target_space_title)
+                    .setItems(labels.toTypedArray()) { _, which ->
+                        val targetUserId = ids.getOrNull(which) ?: 0
+                        Log.i(TAG, "YLB import target space: $targetUserId")
+                        runYlbImport(mnemonic, password, targetUserId)
+                    }
+                    .setNegativeButton(R.string.cancel, null)
+                    .show()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error showing YLB target space dialog: ${e.message}")
+            toast(getString(R.string.backup_error_generic, e.message ?: ""))
+        }
+    }
+
+    /**
+     * parse -> convertToV1 -> engine restore. All engine calls block, so everything runs on
+     * Dispatchers.IO; progress comes from the shared restore listener (main thread).
+     */
+    private fun runYlbImport(mnemonic: CharArray, password: CharArray?, targetUserId: Int) {
+        val file = ylbSourceFile
+        if (file == null || !file.isFile) {
+            Log.e(TAG, "YLB import aborted: source file disappeared")
+            return
+        }
+        isRunning = true
+        showProgressDialog()
+        lifecycleScope.launch {
+            var parseResult: YlbBackupParser.YlbParseResult? = null
+            var v1Zip: File? = null
+            var result: RestoreResult? = null
+            var failure: Throwable? = null
+            try {
+                parseResult = withContext(Dispatchers.IO) {
+                    YlbBackupParser.parse(file, mnemonic, password)
+                }
+                Log.i(
+                        TAG,
+                        "YLB parse ok: matched=${parseResult.matchedDerivation} " +
+                                "packages=${parseResult.packages} " +
+                                "unknown=${parseResult.unknownEntries.size} " +
+                                "skipped=${parseResult.skippedUnsafeEntries.size}",
+                )
+                val staging = File(cacheDir, "ylb_v1_${System.currentTimeMillis()}")
+                v1Zip = withContext(Dispatchers.IO) {
+                    YlbBackupParser.convertToV1(parseResult, targetUserId, staging)
+                }
+                result = withContext(Dispatchers.IO) {
+                    // The generated v1 archive is unencrypted and already carries
+                    // user_id = targetUserId, so no password/mapping is needed here.
+                    BackupManager.get().restore(
+                            this@RestoreActivity,
+                            v1Zip!!,
+                            null,
+                            null,
+                            restoreProgressListener,
+                    )
+                }
+            } catch (t: Throwable) {
+                failure = t
+                Log.e(TAG, "YLB import failed: ${t.message}")
+            } finally {
+                parseResult?.cleanup()
+                v1Zip?.takeIf { it.isFile }?.delete()
+                mnemonic.fill('\u0000')
+                password?.fill('\u0000')
+                ylbPendingMnemonic = null
+                ylbPendingPassword = null
+            }
+
+            if (isFinishing || isDestroyed) {
+                return@launch
+            }
+            dismissProgressDialog()
+            isRunning = false
+
+            val currentFailure = failure
+            when {
+                currentFailure is WrongPasswordException -> {
+                    ylbAttemptsUsed++
+                    if (ylbAttemptsUsed >= BackupUiLogic.MAX_PASSWORD_ATTEMPTS) {
+                        Log.w(TAG, "YLB import: wrong mnemonic/password $ylbAttemptsUsed times; giving up")
+                        toast(getString(R.string.ylb_wrong_password, ylbAttemptsUsed))
+                        ylbSourceFile = null
+                    } else {
+                        toast(getString(R.string.ylb_wrong_password, ylbAttemptsUsed))
+                        showYlbMnemonicDialog()
+                    }
+                }
+                currentFailure is YlbFormatException -> {
+                    toast(getString(R.string.ylb_import_failed_generic, currentFailure.message ?: ""))
+                }
+                currentFailure != null -> {
+                    handleGlobalFailure(currentFailure)
+                }
+                result != null -> {
+                    val unknown = parseResult?.unknownEntries?.size ?: 0
+                    if (unknown > 0) {
+                        toast(getString(R.string.ylb_unknown_entries, unknown))
+                    }
+                    toast(R.string.ylb_done)
+                    showRestoreResult(result, 0, null)
+                    ylbSourceFile = null
+                }
+            }
         }
     }
 

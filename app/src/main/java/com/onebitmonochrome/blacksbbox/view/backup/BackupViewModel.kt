@@ -81,6 +81,19 @@ object BackupUiLogic {
     private const val TAG = "BackupUiLogic"
 
     const val MAX_PASSWORD_ATTEMPTS = 3
+
+    /**
+     * Meta Wolf identities are 12-word BIP39 mnemonics (community verified); the import
+     * dialog gates on exactly 12 whitespace-separated words (TC-UI-03). The parser itself
+     * still accepts the other standard BIP39 lengths (15/18/21/24) if invoked directly.
+     */
+    const val YLB_MNEMONIC_WORD_COUNT = 12
+
+    /** True when [text] is exactly [YLB_MNEMONIC_WORD_COUNT] whitespace-separated words. */
+    fun hasValidYlbMnemonicWordCount(text: String): Boolean {
+        val words = text.trim().split(Regex("\s+"))
+        return words.size == YLB_MNEMONIC_WORD_COUNT && words.all { it.isNotBlank() }
+    }
     const val FROZEN_VALUE_TRUE = "true"
     const val KEY_NOTE_SPACE_PREFIX = "note:space:"
     const val BACKUP_FILE_PREFIX = "blackbox_backup_"

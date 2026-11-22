@@ -20,6 +20,7 @@ import com.onebitmonochrome.blacksbbox.data.AppSortEntry
 import com.onebitmonochrome.blacksbbox.R
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -392,5 +393,29 @@ class BackupUiLogicTest {
     fun `password attempts are limited`() {
         assertTrue(BackupUiLogic.MAX_PASSWORD_ATTEMPTS >= 2)
         assertEquals(3, BackupUiLogic.MAX_PASSWORD_ATTEMPTS)
+    }
+
+    // -----------------------------------------------------------------------------------------
+    // TC-UI-03: Meta Wolf import dialog gates the confirm button on a 12-word mnemonic.
+    // -----------------------------------------------------------------------------------------
+
+    @Test
+    fun `ylb mnemonic accepts exactly twelve words`() {
+        val twelve = (1..12).joinToString(" ") { "word$it" }
+        assertTrue(BackupUiLogic.hasValidYlbMnemonicWordCount(twelve))
+        assertTrue(BackupUiLogic.hasValidYlbMnemonicWordCount("  $twelve  "))
+        assertTrue(BackupUiLogic.hasValidYlbMnemonicWordCount("$twelve
+"))
+    }
+
+    @Test
+    fun `ylb mnemonic rejects wrong word counts`() {
+        val eleven = (1..11).joinToString(" ") { "word$it" }
+        val thirteen = (1..13).joinToString(" ") { "word$it" }
+        assertFalse(BackupUiLogic.hasValidYlbMnemonicWordCount(eleven))
+        assertFalse(BackupUiLogic.hasValidYlbMnemonicWordCount(thirteen))
+        assertFalse(BackupUiLogic.hasValidYlbMnemonicWordCount(""))
+        assertFalse(BackupUiLogic.hasValidYlbMnemonicWordCount("   "))
+        assertFalse(BackupUiLogic.hasValidYlbMnemonicWordCount("singleword"))
     }
 }

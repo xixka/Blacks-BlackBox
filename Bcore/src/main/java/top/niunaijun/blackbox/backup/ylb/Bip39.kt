@@ -16,6 +16,7 @@
 package top.niunaijun.blackbox.backup.ylb
 
 import top.niunaijun.blackbox.backup.BackupLog
+import top.niunaijun.blackbox.backup.ylb.exception.YlbFormatException
 import java.util.Locale
 import java.text.Normalizer
 import java.security.MessageDigest

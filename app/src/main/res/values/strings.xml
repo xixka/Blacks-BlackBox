@@ -285,4 +285,15 @@
     <string name="install_exception_fail">Installation failed: %1$s</string>
     <string name="uninstall_exception_fail">Uninstallation failed: %1$s</string>
     <string name="clear_exception_fail">Clear failed: %1$s</string>
+    <string name="ylb_detected_title">Meta Wolf backup</string>
+    <string name="ylb_detected_message">A Meta Wolf backup archive was detected. Importing requires the 12-word mnemonic identity that was used on the source device (plus its password, if one was set).</string>
+    <string name="ylb_mnemonic_hint">12-word mnemonic (space separated)</string>
+    <string name="ylb_password_hint">Identity password (leave empty if none)</string>
+    <string name="ylb_word_count_invalid">The mnemonic must be exactly 12 English words</string>
+    <string name="ylb_target_space_title">Choose target space for import</string>
+    <string name="ylb_new_space">New space</string>
+    <string name="ylb_wrong_password">Wrong mnemonic or password (attempt %1$d)</string>
+    <string name="ylb_import_failed_generic">Import failed: %1$s</string>
+    <string name="ylb_unknown_entries">%1$d entries with no recognized owner were skipped (kept out of the import)</string>
+    <string name="ylb_done">Meta Wolf backup import finished</string>
 </resources>

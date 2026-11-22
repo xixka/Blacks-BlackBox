@@ -50,6 +50,9 @@ android {
     kotlinOptions {
         jvmTarget = '21'
     }
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
 
     applicationVariants.configureEach { variant ->
         variant.outputs.configureEach { output ->

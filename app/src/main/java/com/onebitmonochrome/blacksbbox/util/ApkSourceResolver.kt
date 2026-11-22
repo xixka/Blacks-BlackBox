@@ -66,7 +66,9 @@ object ApkSourceResolver {
         if (s.startsWith("content:/") && !s.startsWith("content://")) {
             return "content://" + s.removePrefix("content:/")
         }
-        if (s.startsWith("/file:/")) return "file://" + s.removePrefix("/file:/")
+        // Absolute local path form: "/file:/dir/app.apk" lost its leading slash to the
+        // "/file:/" prefix, so restore it as a proper absolute file URI (three slashes).
+        if (s.startsWith("/file:/")) return "file:///" + s.removePrefix("/file:/")
         if (s.startsWith("file:/") && !s.startsWith("file://")) {
             return "file://" + s.removePrefix("file:/")
         }

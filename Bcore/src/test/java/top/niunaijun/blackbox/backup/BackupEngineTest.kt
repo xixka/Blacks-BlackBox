@@ -67,7 +67,7 @@ class BackupEngineTest {
 
         try {
             engine.backup(
-                listOf(BackupManager.BackupRequest("com.test.app", 0)),
+                listOf(BackupRequest("com.test.app", 0)),
                 java.io.ByteArrayOutputStream(),
                 null, null, null, null,
             )
@@ -96,7 +96,7 @@ class BackupEngineTest {
             tempDirProvider = { tmp.newFolder("temp5b") },
             stopWaitMillis = 0L,
         )
-        val (bytes, result) = backupToBytes(engine, listOf(BackupManager.BackupRequest("com.test.app", 0)))
+        val (bytes, result) = backupToBytes(engine, listOf(BackupRequest("com.test.app", 0)))
         assertEquals(1, result.succeeded.size)
         assertTrue(bytes.isNotEmpty())
     }
@@ -128,7 +128,7 @@ class BackupEngineTest {
         // Backup time: cert A.
         val packagesBackup = BackupTestSupport.FakePackages(mapOf("com.test.app#0" to meta("com.test.app", 0, "certA")))
         val backupEngine = engine(BackupTestSupport.FakeRoots(vr, null), packagesBackup, BackupTestSupport.FakeBridge())
-        val (zipBytes, backupResult) = backupToBytes(backupEngine, listOf(BackupManager.BackupRequest("com.test.app", 0)))
+        val (zipBytes, backupResult) = backupToBytes(backupEngine, listOf(BackupRequest("com.test.app", 0)))
         assertEquals("certA", backupResult.manifest!!.apps[0].signingCertSha256)
         val archive = BackupTestSupport.bytesToFile(zipBytes, tmp.newFolder("archives14"))
 
@@ -160,7 +160,7 @@ class BackupEngineTest {
         val backupEngine = engine(BackupTestSupport.FakeRoots(vr, evr), packages, BackupTestSupport.FakeBridge())
         val (zipBytes, backupResult) = backupToBytes(
             backupEngine,
-            listOf(BackupManager.BackupRequest("com.test.app", 0)),
+            listOf(BackupRequest("com.test.app", 0)),
             password = "secret123".toCharArray(),
         )
         assertTrue(backupResult.manifest!!.encrypted)
@@ -194,7 +194,7 @@ class BackupEngineTest {
         val backupEngine = engine(BackupTestSupport.FakeRoots(vr, null), packages, BackupTestSupport.FakeBridge())
         val (zipBytes, _) = backupToBytes(
             backupEngine,
-            listOf(BackupManager.BackupRequest("com.test.app", 0)),
+            listOf(BackupRequest("com.test.app", 0)),
             password = "pw".toCharArray(),
         )
         val archive = BackupTestSupport.bytesToFile(zipBytes, tmp.newFolder("archivesEnc2"))
@@ -217,7 +217,7 @@ class BackupEngineTest {
         buildAppSkeleton(vr, null, "com.test.app", 0)
         val packages = BackupTestSupport.FakePackages(mapOf("com.test.app#0" to meta("com.test.app", 0)))
         val backupEngine = engine(BackupTestSupport.FakeRoots(vr, null), packages, BackupTestSupport.FakeBridge())
-        val (zipBytes, _) = backupToBytes(backupEngine, listOf(BackupManager.BackupRequest("com.test.app", 0)))
+        val (zipBytes, _) = backupToBytes(backupEngine, listOf(BackupRequest("com.test.app", 0)))
 
         // Corrupt manifest.json bytes in place (keep zip structure valid: rewrite the archive).
         val rewritten = rewriteManifest(zipBytes, """{"format_version":1,"apps":[],"tampered":true}""")
@@ -250,7 +250,7 @@ class BackupEngineTest {
         )
         val (zipBytes, _) = backupToBytes(
             backupEngine,
-            listOf(BackupManager.BackupRequest("com.test.app", 0)),
+            listOf(BackupRequest("com.test.app", 0)),
             hostPrefs = hostPrefs,
         )
         val archive = BackupTestSupport.bytesToFile(zipBytes, tmp.newFolder("archivesHP"))

@@ -81,7 +81,7 @@ class BackupArchiveTest {
         val (engine, _) = buildEngine(vr, evr)
         val (zipBytes, backupResult) = backupToBytes(
             engine,
-            listOf(BackupManager.BackupRequest("com.test.app", 0)),
+            listOf(BackupRequest("com.test.app", 0)),
         )
         assertEquals(1, backupResult.succeeded.size)
         assertTrue(backupResult.failed.isEmpty())
@@ -143,7 +143,7 @@ class BackupArchiveTest {
         val (engine, _) = buildEngine(vr, evr)
         val (zipBytes, result) = backupToBytes(
             engine,
-            listOf(BackupManager.BackupRequest("com.test.app", 0, excludeCache = true)),
+            listOf(BackupRequest("com.test.app", 0, excludeCache = true)),
         )
 
         assertTrue(result.manifest!!.apps[0].excludeCache)
@@ -182,7 +182,7 @@ class BackupArchiveTest {
         File(dataDir, "nested/deep/file.txt").writeText("nested content")
 
         val (engine, _) = buildEngine(vr, evr)
-        val (zipBytes, _) = backupToBytes(engine, listOf(BackupManager.BackupRequest("com.test.app", 0)))
+        val (zipBytes, _) = backupToBytes(engine, listOf(BackupRequest("com.test.app", 0)))
         val archive = BackupTestSupport.bytesToFile(zipBytes, tmp.newFolder("archives6"))
 
         val dest = tmp.newFolder("dst6")
@@ -254,8 +254,8 @@ class BackupArchiveTest {
         val (zipBytes, result) = backupToBytes(
             eng,
             listOf(
-                BackupManager.BackupRequest("com.a.b-c", 0),
-                BackupManager.BackupRequest("com.a.b_c", 0),
+                BackupRequest("com.a.b-c", 0),
+                BackupRequest("com.a.b_c", 0),
             ),
         )
         assertEquals(2, result.succeeded.size)
@@ -276,7 +276,7 @@ class BackupArchiveTest {
         vr.mkdirs()
         buildAppSkeleton(vr, null, "com.test.app", 0)
         val (engine, _) = buildEngine(vr, null)
-        val (zipBytes, _) = backupToBytes(engine, listOf(BackupManager.BackupRequest("com.test.app", 0)))
+        val (zipBytes, _) = backupToBytes(engine, listOf(BackupRequest("com.test.app", 0)))
         val archive = BackupTestSupport.bytesToFile(zipBytes, tmp.newFolder("archivesH"))
 
         val header = BackupArchive.readHeader(archive)

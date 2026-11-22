@@ -122,7 +122,7 @@ object BackupTestSupport {
 
     fun backupToBytes(
         engine: BackupEngine,
-        requests: List<BackupManager.BackupRequest>,
+        requests: List<BackupRequest>,
         password: CharArray? = null,
         hostPrefs: HostPrefs? = null,
         hostInfo: HostInfo? = HostInfo("test-device", 33, 460),

@@ -237,3 +237,40 @@
 5. 官方远程模块仓库 URL（设计为用户自行添加的"去中心化"仓库 + SDK `changeRemoteServerUrl`，未发现固定公开 URL）——无公开资料
 6. jonepjxh 元萝卜实测帖原文（52pojie 站内搜索需登录，搜索引擎未收录）——无公开资料
 7. 元萝卜 APK 的查壳/加固技术分析帖——无公开资料（仅有通用查壳方法论；APK 自身可在 GitHub releases 直接下载，壳/加固情况建议后续拿到 APK 后用 ApkCheckPack 等开源工具自测，本调研未做，因任务纪律禁碰二进制分析以外的代码行为）
+
+---
+
+## 8. V1.0.29 实测逆向验证（2026-11-22，Agent D2 执行，clean-room）
+
+> 方法：下载官方 GitHub release `app-universal-release.apk`（V1.0.29，2026-08-27，sha256 `b937919160425aca52bdca1c6d9923d440f881e377636a529adc900c77d56930`），纯静态分析（dex 字符串/交叉引用扫描 + 反编译阅读），未运行任何元萝卜代码。以下仅记录格式事实与算法结论（互操作目的），不含反编译代码。APK 明文未混淆部分：引擎包 `top.bienvenido.mundo.*`（128 类，VirtualApp 血统）；业务逻辑经 R8 混淆（单字母类名），通过字符串交叉引用定位。
+
+### 8.1 确认的事实（推翻/补全 §4 假设）
+
+| # | 事实 | 证据强度 |
+|---|---|---|
+| F1 | 备份容器为 **zip4j 加密 zip**（标准 WinZip AES 加密：PBKDF2-HMAC-SHA1 密钥派生 + AES 加密 + HMAC-SHA1 认证），不是整包加密文件。zip4j 全库存在但类名被混淆 | 高（zip4j 特征字符串集：AES Encrypter 状态机/AesExtraDataRecord/空密码报错文案全数命中） |
+| F2 | 备份导出走 SAF `CREATE_DOCUMENT`，建议文件名常量 **`Mundo-Backup.zip`**；导入走 `OPEN_DOCUMENT` 后复制到 `codeCacheDir/temp.zip` 再处理 | 高 |
+| F3 | **zip 密码 = 身份钱包私钥的十六进制字符串**：`loadCredentials(keystore路径, 用户密码)` → `ECKeyPair.privateKey.toString(16)` → char[] 直接作为 zip 密码。keystore 为 web3j `WalletFile` v3 JSON，存放于 `cacheDir/wallet/0x<地址去掉0x>.json` | 高（解密调用链完整闭合：Fragment→密码对话框→keystore 加载→web3j decrypt→hex→ZipFile/ZipInputStream） |
+| F4 | keystore 解密密钥来源是 **12/24 词 BIP39 助记词**（可叠加用户密码）：APK 内置标准 BIP39 英文词表资产（`en-mnemonic-word-list.txt`，2048 行）；助记词→seed 为**标准 BIP39**（PBKDF2-HMAC-SHA512，2048 次迭代，盐 `"mnemonic" + passphrase`，输出 512 位）；UI 资源文案即"BIP39助记词" | 高 |
+| F5 | 备份内容 = `getDir("foza_apks")`（伏羲暂存区，含分身 APK/数据暂存）+ `getDir("split")`（split APK），按所选应用过滤；**未选中任何应用时打包两目录全量** | 高 |
+| F6 | **zip 条目路径 = 相对宿主 dataDir 的相对路径**（`canonicalPath.substring(dataDirLen)`），还原时逐条目 `File(dataDir, entryName)` 直接解出；目录条目 mkdirs，文件条目流式写 | 高 |
+| F7 | 还原与导出共用同一密码派生路径（keystore→私钥→hex），**跨设备还原成立的前提 = 相同身份 keystore**（导入相同助记词+密码→同地址→同私钥），与社区实测"三步缺一不可"完全吻合 | 高 |
+| F8 | 存在**自毁密码机制**：prefs 键 `destroy_password`，输入匹配后卸载全部应用；`saved_date_pwd` 为另一组日期派生口令校验；`app_password` 为应用锁（带 BiometricPrompt），三者均与备份加密无关 | 高 |
+| F9 | 助记词→地址的派生路径含"槽位"因素（issue #121：同助记词两机地址不同）——静态分析无法确认具体 BIP32 路径（BIP44 路径无字符串常量，派生用整数常量），需运行时用测试助记词验证候选：`m/44'/60'/0'/0/0` 及 `m/44'/60'/{slot}'/0/0` | 中（缺运行时验证） |
+| F10 | keystore v3 的 KDF 参数（scrypt N=512 弱参数 vs aes-128-ctr PBKDF2）以官方 Meta demo 源码推断（§3.2），本版 keystore 创建代码同样无法纯静态确认——**但 F3/F4 的导入方案可以完全绕过 keystore**（见 8.2） | 中 |
+
+### 8.2 对导入实现的指导（替代 §5 的"30 分钟验证清单"）
+
+**无需真机样本即可实现导入器**，流程：
+
+1. `sniff`：zip central directory 出现 AES 加密标记（compression method 99 + "AE" vendor extra field）→ 判定元萝卜候选；再校验条目路径形态（相对路径、含 `app_foza_apks/`/`app_split/` 前缀等）。
+2. 解密：用户输入 12/24 词助记词 + 密码 → BIP39 seed → 候选派生链（BIP32/BIP44 各槽位）→ 候选私钥 → hex 字符串作为 zip 密码 → **用 WinZip AES 的 HMAC-SHA1 认证域快速试错**（错误密码毫秒级淘汰，不产生误报）。
+3. 命中后逐条目解出：条目路径即元萝卜侧 dataDir 相对路径（F6），按路径中的包名段映射到本引擎 `data/user/{uid}/{pkg}/` 布局（映射表见 §6）。
+4. 若所有候选派生均未命中（keystore 私钥非 BIP44 标准路径派生），降级为"部分导入"：提示用户提供 keystore JSON（若可从设备导出）→ 走 F3 的 keystore 解密路径。
+5. 合规：以上为格式事实（算法/参数/路径规则），实现按本节规范书写，不复制任何反编译代码。
+
+### 8.3 结论（更新 §7）
+
+**三档结论从"不可导入"升级为"完整导入（带运行时验证步骤）"**：
+- F1-F8 已将格式全链路静态闭合，剩余不确定性仅剩 F9/F10 两点，均有运行时兜底（候选派生 + HMAC 试错自动淘汰）。
+- 风险残留：若元萝卜未来版本改用服务器托管密钥或换容器，需重新验证（当前 V1.0.29 为 2026-08 发布，属最新）。

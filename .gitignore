@@ -31,9 +31,7 @@ logs/
 # Local workspace / scratch content that should not go online
 .tmp_*/
 .venv-pdf/
-.github/
 Github/
-docs/
 tools/
 assets/
 inspiration/
@@ -41,6 +39,10 @@ inspiration/
 # Markdown notes and local instructions
 *.md
 !README.md
+!docs/**
+
+# CI workflows and format research docs are deliverables, keep them tracked
+!.github/
 
 # Local test artifacts / personal files
 BlacksBlackBox.png

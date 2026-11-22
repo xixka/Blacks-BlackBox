@@ -1,4 +1,7 @@
-apply plugin: 'com.android.library'
+plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.jetbrains.kotlin.android)
+}
 
 android {
     namespace 'top.niunaijun.blackbox'
@@ -42,8 +45,11 @@ android {
         sourceCompatibility JavaVersion.VERSION_21
         targetCompatibility JavaVersion.VERSION_21
     }
-    
-    
+
+    kotlinOptions {
+        jvmTarget = '21'
+    }
+
     tasks.withType(JavaCompile) {
         options.compilerArgs << "-Xlint:-deprecation" << "-Xlint:-unchecked" << "-Xlint:-rawtypes"
         options.fork = true
@@ -88,7 +94,10 @@ dependencies {
 
     implementation 'com.github.tiann:FreeReflection:3.2.2'
 
+    // backup engine (top.niunaijun.blackbox.backup): kotlin + gson manifest serialization
+    implementation libs.kotlin.stdlib
+    implementation libs.gson
 
-
-    
+    // pure-JVM unit tests for the backup engine
+    testImplementation libs.junit
 }

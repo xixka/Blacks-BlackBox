@@ -76,6 +76,7 @@ tasks.named("preBuild").configure {
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar", "*.aar"])
     implementation project(':Bcore')
+    implementation libs.gson
 
     implementation libs.appcompat
     implementation libs.material

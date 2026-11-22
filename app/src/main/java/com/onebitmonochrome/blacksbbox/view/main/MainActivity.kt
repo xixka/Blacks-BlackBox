@@ -12,10 +12,7 @@ import android.view.MenuItem
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
-import androidx.core.content.edit
-import androidx.viewpager2.widget.ViewPager2
 import com.afollestad.materialdialogs.MaterialDialog
-import com.afollestad.materialdialogs.input.input
 import top.niunaijun.blackbox.BlackBoxCore
 import com.onebitmonochrome.blacksbbox.R
 import com.onebitmonochrome.blacksbbox.app.App
@@ -26,6 +23,7 @@ import com.onebitmonochrome.blacksbbox.util.Resolution
 import com.onebitmonochrome.blacksbbox.util.inflate
 import com.onebitmonochrome.blacksbbox.util.toast
 import com.onebitmonochrome.blacksbbox.view.apps.AppsFragment
+import com.onebitmonochrome.blacksbbox.view.backup.BackupActivity
 import com.onebitmonochrome.blacksbbox.view.base.LoadingActivity
 import com.onebitmonochrome.blacksbbox.view.fake.FakeManagerActivity
 import com.onebitmonochrome.blacksbbox.view.gallery.BlackBoxGalleryActivity
@@ -36,12 +34,6 @@ import com.onebitmonochrome.blacksbbox.view.setting.SettingActivity
 class MainActivity : LoadingActivity() {
 
     private val viewBinding: ActivityMainBinding by inflate()
-
-    private lateinit var mViewPagerAdapter: ViewPagerAdapter
-
-    private val fragmentList = mutableListOf<AppsFragment>()
-
-    private var currentUser = 0
 
     companion object {
         private const val TAG = "MainActivity"
@@ -66,15 +58,12 @@ class MainActivity : LoadingActivity() {
 
             setContentView(viewBinding.root)
             initToolbar(viewBinding.toolbarLayout.toolbar, R.string.app_name)
-            initViewPager()
+            initView()
             initFab()
             initFreezeFab()
-            initToolbarSubTitle()
 
-            
             checkStoragePermission()
 
-            
             checkVpnPermission()
 
             try {
@@ -84,7 +73,7 @@ class MainActivity : LoadingActivity() {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Critical error in onCreate: ${e.message}")
-            
+
             showErrorDialog("Failed to initialize app: ${e.message}")
         }
     }
@@ -101,13 +90,13 @@ class MainActivity : LoadingActivity() {
     private fun checkStoragePermission() {
         try {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-                
+
                 if (!android.os.Environment.isExternalStorageManager()) {
                     Log.w(TAG, "MANAGE_EXTERNAL_STORAGE permission not granted")
                     showStoragePermissionDialog()
                 }
             } else {
-                
+
                 if (androidx.core.content.ContextCompat.checkSelfPermission(
                                 this,
                                 android.Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -193,7 +182,7 @@ class MainActivity : LoadingActivity() {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error opening storage settings: ${e.message}")
-            
+
             try {
                 val intent =
                         Intent(android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
@@ -219,7 +208,7 @@ class MainActivity : LoadingActivity() {
                 }
             }
 
-    
+
     private fun checkVpnPermission() {
         try {
             val vpnEnabled = try {
@@ -258,7 +247,7 @@ class MainActivity : LoadingActivity() {
                     Log.e(TAG, "Error disabling VPN setting: ${e.message}")
                 }
             } else {
-                
+
                 Log.d(TAG, "VPN permission already granted")
             }
         } catch (e: Exception) {
@@ -271,7 +260,7 @@ class MainActivity : LoadingActivity() {
                 try {
                     if (result.resultCode == RESULT_OK) {
                         Log.d(TAG, "VPN permission granted!")
-                        
+
                     } else {
                         Log.w(TAG, "VPN permission denied by user")
                     }
@@ -293,80 +282,15 @@ class MainActivity : LoadingActivity() {
         }
     }
 
-    private fun initToolbarSubTitle() {
+    private fun initView() {
         try {
-            updateUserRemark(currentUser)
-            
-            viewBinding.toolbarLayout.toolbar.getChildAt(1)?.setOnClickListener {
-                try {
-                    MaterialDialog(this).show {
-                        title(res = R.string.userRemark)
-                        input(
-                                hintRes = R.string.userRemark,
-                                prefill = viewBinding.toolbarLayout.toolbar.subtitle
-                        ) { _, input ->
-                            try {
-                                AppManager.mRemarkSharedPreferences.edit {
-                                    putString("Remark$currentUser", input.toString())
-                                    viewBinding.toolbarLayout.toolbar.subtitle = input
-                                }
-                            } catch (e: Exception) {
-                                Log.e(TAG, "Error saving user remark: ${e.message}")
-                            }
-                        }
-                        positiveButton(res = R.string.done)
-                        negativeButton(res = R.string.cancel)
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error showing remark dialog: ${e.message}")
-                }
-            }
+            val fragment = AppsFragment.newInstance()
+            supportFragmentManager
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, fragment)
+                    .commit()
         } catch (e: Exception) {
-            Log.e(TAG, "Error in initToolbarSubTitle: ${e.message}")
-        }
-    }
-
-    private fun initViewPager() {
-        try {
-            val userList = BlackBoxCore.get().users
-            userList.forEach { fragmentList.add(AppsFragment.newInstance(it.id)) }
-
-            currentUser = userList.firstOrNull()?.id ?: 0
-            fragmentList.add(AppsFragment.newInstance(userList.size))
-
-            mViewPagerAdapter = ViewPagerAdapter(this)
-            mViewPagerAdapter.replaceData(fragmentList)
-            viewBinding.viewPager.adapter = mViewPagerAdapter
-            viewBinding.viewPager.offscreenPageLimit = 1
-            viewBinding.viewPager.setPageTransformer { page, position ->
-                val absPos = kotlin.math.abs(position)
-                val scale = 0.94f + ((1f - absPos.coerceAtMost(1f)) * 0.06f)
-                page.scaleX = scale
-                page.scaleY = scale
-                page.alpha = 0.75f + ((1f - absPos.coerceAtMost(1f)) * 0.25f)
-                page.translationX = -position * 22f
-            }
-            viewBinding.dotsIndicator.setViewPager2(viewBinding.viewPager)
-            viewBinding.viewPager.registerOnPageChangeCallback(
-                    object : ViewPager2.OnPageChangeCallback() {
-                        override fun onPageSelected(position: Int) {
-                            try {
-                                super.onPageSelected(position)
-                                currentUser = if (position in userList.indices) {
-                                    userList[position].id
-                                } else {
-                                    fragmentList[position].userID
-                                }
-                                updateUserRemark(currentUser)
-                                showFloatButton(true)
-                            } catch (e: Exception) {
-                                Log.e(TAG, "Error in onPageSelected: ${e.message}")
-                            }
-                        }
-                    }
-            )
-        } catch (e: Exception) {
-            Log.e(TAG, "Error in initViewPager: ${e.message}")
+            Log.e(TAG, "Error in initView: ${e.message}")
         }
     }
 
@@ -374,9 +298,9 @@ class MainActivity : LoadingActivity() {
         try {
             viewBinding.fab.setOnClickListener {
                 try {
-                    val userId = currentUser
+                    // No single "current" space anymore: ListActivity picks the last used
+                    // space (or the first one) and lets the user switch via its selector.
                     val intent = Intent(this, ListActivity::class.java)
-                    intent.putExtra("userID", userId)
                     apkPathResult.launch(intent)
                 } catch (e: Exception) {
                     Log.e(TAG, "Error launching ListActivity: ${e.message}")
@@ -470,34 +394,45 @@ class MainActivity : LoadingActivity() {
         }
     }
 
-    fun scanUser() {
+    /**
+     * Shows a dialog listing every virtual space (with its remark) and invokes [onSelected]
+     * with the chosen space id. Used for menu entries that used to rely on a single
+     * "current user" and now need an explicit space choice.
+     */
+    private fun withSelectedSpace(onSelected: (Int) -> Unit) {
         try {
-            val userList = BlackBoxCore.get().users
-
-            if (fragmentList.size == userList.size) {
-                fragmentList.add(AppsFragment.newInstance(fragmentList.size))
-            } else if (fragmentList.size > userList.size + 1) {
-                fragmentList.removeLast()
+            val users = BlackBoxCore.get().users
+            if (users.isEmpty()) {
+                Log.w(TAG, "withSelectedSpace: no virtual spaces available")
+                toast(R.string.choose_space)
+                return
             }
 
-            mViewPagerAdapter.notifyDataSetChanged()
-        } catch (e: Exception) {
-            Log.e(TAG, "Error in scanUser: ${e.message}")
-        }
-    }
+            val labels = users.map { user ->
+                try {
+                    AppManager.mRemarkSharedPreferences
+                            .getString("Remark${user.id}", null)
+                            ?.takeIf { it.isNotBlank() }
+                            ?: "User ${user.id}"
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error reading remark for space ${user.id}: ${e.message}")
+                    "User ${user.id}"
+                }
+            }.toTypedArray()
 
-    private fun updateUserRemark(userId: Int) {
-        try {
-            var remark =
-                    AppManager.mRemarkSharedPreferences.getString("Remark$userId", "User $userId")
-            if (remark.isNullOrEmpty()) {
-                remark = "User $userId"
-            }
-
-            viewBinding.toolbarLayout.toolbar.subtitle = remark
+            AlertDialog.Builder(this)
+                    .setTitle(R.string.choose_space)
+                    .setItems(labels) { _, which ->
+                        try {
+                            users.getOrNull(which)?.let { onSelected(it.id) }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error handling selected space: ${e.message}")
+                        }
+                    }
+                    .setNegativeButton(R.string.cancel, null)
+                    .show()
         } catch (e: Exception) {
-            Log.e(TAG, "Error updating user remark: ${e.message}")
-            viewBinding.toolbarLayout.toolbar.subtitle = "User $userId"
+            Log.e(TAG, "Error showing space selection dialog: ${e.message}")
         }
     }
 
@@ -509,11 +444,12 @@ class MainActivity : LoadingActivity() {
                             val userId = data.getIntExtra("userID", 0)
                             val source = data.getStringExtra("source")
                             if (source != null) {
-                                val targetFragment = fragmentList.firstOrNull { f -> f.userID == userId }
+                                val targetFragment =
+                                        supportFragmentManager.findFragmentById(R.id.fragment_container) as? AppsFragment
                                 if (targetFragment != null) {
-                                    targetFragment.installApk(source)
+                                    targetFragment.installApk(source, userId)
                                 } else {
-                                    Log.w(TAG, "No fragment found for userId=$userId; dropping install result")
+                                    Log.w(TAG, "AppsFragment not found; dropping install result")
                                 }
                             }
                         }
@@ -540,16 +476,41 @@ class MainActivity : LoadingActivity() {
                     SettingActivity.start(this)
                 }
                 R.id.fake_location -> {
-                    
-                    val intent = Intent(this, FakeManagerActivity::class.java)
-                    intent.putExtra("userID", currentUser)
-                    startActivity(intent)
+                    withSelectedSpace { userId ->
+                        try {
+                            val intent = Intent(this, FakeManagerActivity::class.java)
+                            intent.putExtra("userID", userId)
+                            startActivity(intent)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error launching FakeManagerActivity: ${e.message}")
+                        }
+                    }
                 }
                 R.id.device_spoofing -> {
-                    DeviceSpoofingActivity.start(this, currentUser)
+                    withSelectedSpace { userId ->
+                        try {
+                            DeviceSpoofingActivity.start(this, userId)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error launching DeviceSpoofingActivity: ${e.message}")
+                        }
+                    }
                 }
                 R.id.blackbox_gallery -> {
-                    BlackBoxGalleryActivity.start(this, currentUser)
+                    withSelectedSpace { userId ->
+                        try {
+                            BlackBoxGalleryActivity.start(this, userId)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error launching BlackBoxGalleryActivity: ${e.message}")
+                        }
+                    }
+                }
+                R.id.backup_restore -> {
+                    try {
+                        val intent = Intent(this, BackupActivity::class.java)
+                        startActivity(intent)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error launching BackupActivity: ${e.message}")
+                    }
                 }
             }
 

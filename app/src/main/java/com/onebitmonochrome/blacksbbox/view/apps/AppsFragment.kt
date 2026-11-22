@@ -1,5 +1,6 @@
 package com.onebitmonochrome.blacksbbox.view.apps
 
+import android.content.Intent
 import android.graphics.Point
 import android.os.Bundle
 import android.text.TextUtils
@@ -8,9 +9,10 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.PopupMenu
-import androidx.core.os.bundleOf
+import androidx.core.content.edit
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
@@ -22,6 +24,7 @@ import top.niunaijun.blackbox.BlackBoxCore
 import top.niunaijun.blackbox.core.env.SamsungHealthCompat
 import com.onebitmonochrome.blacksbbox.R
 import com.onebitmonochrome.blacksbbox.app.AppFreezeManager
+import com.onebitmonochrome.blacksbbox.app.AppManager
 import com.onebitmonochrome.blacksbbox.bean.AppInfo
 import com.onebitmonochrome.blacksbbox.databinding.FragmentAppsBinding
 import com.onebitmonochrome.blacksbbox.util.InjectionUtil
@@ -29,16 +32,23 @@ import com.onebitmonochrome.blacksbbox.util.ShortcutUtil
 import com.onebitmonochrome.blacksbbox.util.inflate
 import com.onebitmonochrome.blacksbbox.util.MemoryManager
 import com.onebitmonochrome.blacksbbox.util.toast
+import com.onebitmonochrome.blacksbbox.view.backup.BackupActivity
 import com.onebitmonochrome.blacksbbox.view.base.LoadingActivity
+import com.onebitmonochrome.blacksbbox.view.fake.FakeManagerActivity
+import com.onebitmonochrome.blacksbbox.view.gallery.BlackBoxGalleryActivity
+import com.onebitmonochrome.blacksbbox.view.list.ListActivity
 import com.onebitmonochrome.blacksbbox.view.main.MainActivity
+import com.onebitmonochrome.blacksbbox.view.spoof.DeviceSpoofingActivity
 import java.util.*
 import kotlin.math.abs
 
 
 
+/**
+ * Single-page (MetaR style) app list: aggregates the installed apps of ALL virtual spaces into
+ * one RecyclerView. Every [AppInfo] carries the space id ([AppInfo.userId]) it belongs to.
+ */
 class AppsFragment : Fragment() {
-
-    var userID: Int = 0
 
     private lateinit var viewModel: AppsViewModel
 
@@ -50,18 +60,14 @@ class AppsFragment : Fragment() {
 
     companion object {
         private const val TAG = "AppsFragment"
-        
-        fun newInstance(userID:Int): AppsFragment {
-            val fragment = AppsFragment()
-            val bundle = bundleOf("userID" to userID)
-            fragment.arguments = bundle
-            return fragment
+
+        fun newInstance(): AppsFragment {
+            return AppsFragment()
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        userID = arguments?.getInt("userID", 0) ?: 0
         try {
             viewModel =
                 ViewModelProvider(this, InjectionUtil.getAppsFactory()).get(AppsViewModel::class.java)
@@ -76,55 +82,42 @@ class AppsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         try {
-            viewBinding.stateView.showEmpty()
+            viewBinding.stateView.showLoading()
 
             mAdapter =
                 RVAdapter<AppInfo>(requireContext(), AppsAdapter()).bind(viewBinding.recyclerView)
 
             viewBinding.recyclerView.adapter = mAdapter
-            
-            
             val layoutManager = GridLayoutManager(requireContext(), 4)
             layoutManager.isItemPrefetchEnabled = true
             layoutManager.initialPrefetchItemCount = 8
             viewBinding.recyclerView.layoutManager = layoutManager
-            
-            
+
             viewBinding.recyclerView.setItemViewCacheSize(20)
             viewBinding.recyclerView.setHasFixedSize(true)
-            
-            
+
             viewBinding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                     try {
                         super.onScrollStateChanged(recyclerView, newState)
                         when (newState) {
                             RecyclerView.SCROLL_STATE_IDLE -> {
-                                
                                 MemoryManager.optimizeMemoryForRecyclerView()
                             }
                             RecyclerView.SCROLL_STATE_DRAGGING -> {
-                                
-                                
                             }
                             RecyclerView.SCROLL_STATE_SETTLING -> {
-                                
-                                
                             }
                         }
                     } catch (e: Exception) {
                         Log.e(TAG, "Error in scroll state change: ${e.message}")
                     }
                 }
-                
+
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     try {
                         super.onScrolled(recyclerView, dx, dy)
-                        
                         if (Math.abs(dy) > 100) {
-                            
-                            
-                            
                             if (MemoryManager.isMemoryCritical()) {
                                 Log.w(TAG, "Memory critical during fast scrolling, forcing GC")
                                 MemoryManager.forceGarbageCollectionIfNeeded()
@@ -151,10 +144,18 @@ class AppsFragment : Fragment() {
             mAdapter.setItemClickListener { _, data, _ ->
                 try {
                     showLoading()
-                    viewModel.launchApk(data.packageName, userID)
+                    viewModel.launchApk(data.packageName, data.userId)
                 } catch (e: Exception) {
                     Log.e(TAG, "Error launching app: ${e.message}")
                     hideLoading()
+                }
+            }
+
+            viewBinding.emptyAddButton.setOnClickListener {
+                try {
+                    apkPathResult.launch(Intent(requireContext(), ListActivity::class.java))
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error launching ListActivity from empty state: ${e.message}")
                 }
             }
 
@@ -163,7 +164,6 @@ class AppsFragment : Fragment() {
             return viewBinding.root
         } catch (e: Exception) {
             Log.e(TAG, "Error in onCreateView: ${e.message}")
-            
             return View(requireContext())
         }
     }
@@ -180,41 +180,36 @@ class AppsFragment : Fragment() {
     override fun onStart() {
         try {
             super.onStart()
-            
-            
             try {
                 BlackBoxCore.get().addServiceAvailableCallback {
                     Log.d(TAG, "Services became available, refreshing app list")
-                    
-                    viewModel.getInstalledAppsWithRetry(userID)
+                    viewModel.getInstalledAppsWithRetry()
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error registering service available callback: ${e.message}")
             }
-            
-            viewModel.getInstalledAppsWithRetry(userID)
+
+            viewModel.getInstalledAppsWithRetry()
         } catch (e: Exception) {
             Log.e(TAG, "Error in onStart: ${e.message}")
         }
     }
 
-    
     private fun interceptTouch() {
         try {
             val point = Point()
             var isScrolling = false
             var scrollStartTime = 0L
-            
+
             viewBinding.recyclerView.setOnTouchListener { _, e ->
                 try {
                     when (e.action) {
                         MotionEvent.ACTION_DOWN -> {
-                            
                             isScrolling = false
                             scrollStartTime = System.currentTimeMillis()
                             point.set(0, 0)
                         }
-                        
+
                         MotionEvent.ACTION_UP -> {
                             val scrollDuration = System.currentTimeMillis() - scrollStartTime
 
@@ -232,14 +227,12 @@ class AppsFragment : Fragment() {
                                 point.x = e.rawX.toInt()
                                 point.y = e.rawY.toInt()
                             }
-                            
-                            
+
                             if (isMove(point, e)) {
                                 isScrolling = true
                                 popupMenu?.dismiss()
                             }
-                            
-                            
+
                             isDownAndUp(point, e)
                         }
                     }
@@ -289,14 +282,13 @@ class AppsFragment : Fragment() {
 
     private fun onItemMove(fromPosition: Int, toPosition: Int) {
         try {
-            
             val items = mAdapter.getItems()
-            if (fromPosition < 0 || toPosition < 0 || 
+            if (fromPosition < 0 || toPosition < 0 ||
                 fromPosition >= items.size || toPosition >= items.size) {
                 Log.w(TAG, "Invalid positions for move: from=$fromPosition, to=$toPosition, size=${items.size}")
                 return
             }
-            
+
             if (fromPosition < toPosition) {
                 for (i in fromPosition until toPosition) {
                     try {
@@ -316,12 +308,11 @@ class AppsFragment : Fragment() {
                     }
                 }
             }
-            
+
             try {
                 mAdapter.notifyItemMoved(fromPosition, toPosition)
             } catch (e: Exception) {
                 Log.e(TAG, "Error notifying item moved: ${e.message}")
-                
                 mAdapter.notifyDataSetChanged()
             }
         } catch (e: Exception) {
@@ -343,7 +334,7 @@ class AppsFragment : Fragment() {
                         if (!isSamsungHealth) {
                             it.menu.removeItem(R.id.app_shealth_login_fallback)
                         } else {
-                            val enabled = SamsungHealthCompat.isHostSamsungAccountFallbackEnabled(userID, data.packageName)
+                            val enabled = SamsungHealthCompat.isHostSamsungAccountFallbackEnabled(data.userId, data.packageName)
                             it.menu.findItem(R.id.app_shealth_login_fallback)?.setTitle(
                                     if (enabled) R.string.shealth_login_fallback_disable else R.string.shealth_login_fallback_enable
                             )
@@ -368,7 +359,7 @@ class AppsFragment : Fragment() {
                                     }
 
                                     R.id.app_shortcut -> {
-                                        ShortcutUtil.createShortcut(requireContext(), userID, data)
+                                        ShortcutUtil.createShortcut(requireContext(), data.userId, data)
                                     }
 
                                     R.id.app_freeze_options -> {
@@ -377,6 +368,14 @@ class AppsFragment : Fragment() {
 
                                     R.id.app_shealth_login_fallback -> {
                                         toggleSamsungHealthLoginFallback(data)
+                                    }
+
+                                    R.id.app_backup -> {
+                                        BackupActivity.start(requireContext(), data.packageName, data.userId, data.name)
+                                    }
+
+                                    R.id.app_space_manage -> {
+                                        showSpaceManagerDialog(data.userId)
                                     }
                                 }
                                 return@setOnMenuItemClickListener true
@@ -398,9 +397,9 @@ class AppsFragment : Fragment() {
 
     private fun toggleSamsungHealthLoginFallback(info: AppInfo) {
         try {
-            val enabled = SamsungHealthCompat.isHostSamsungAccountFallbackEnabled(userID, info.packageName)
+            val enabled = SamsungHealthCompat.isHostSamsungAccountFallbackEnabled(info.userId, info.packageName)
             if (enabled) {
-                SamsungHealthCompat.setHostSamsungAccountFallbackEnabled(userID, info.packageName, false)
+                SamsungHealthCompat.setHostSamsungAccountFallbackEnabled(info.userId, info.packageName, false)
                 requireContext().toast(getString(R.string.shealth_login_fallback_disabled))
                 return
             }
@@ -409,7 +408,7 @@ class AppsFragment : Fragment() {
                     .setTitle(R.string.shealth_login_fallback_dialog_title)
                     .setMessage(R.string.shealth_login_fallback_dialog_message)
                     .setPositiveButton(R.string.enable) { _, _ ->
-                        SamsungHealthCompat.setHostSamsungAccountFallbackEnabled(userID, info.packageName, true)
+                        SamsungHealthCompat.setHostSamsungAccountFallbackEnabled(info.userId, info.packageName, true)
                         requireContext().toast(getString(R.string.shealth_login_fallback_enabled))
                     }
                     .setNegativeButton(R.string.cancel, null)
@@ -418,20 +417,15 @@ class AppsFragment : Fragment() {
             Log.e(TAG, "Error toggling Samsung Health login fallback: ${e.message}")
         }
     }
-    
+
     private fun initData() {
         try {
-            viewBinding.stateView.showLoading()
-            viewModel.getInstalledApps(userID)
+            viewModel.getInstalledApps()
             viewModel.appsLiveData.observe(viewLifecycleOwner) {
                 try {
                     if (it != null) {
                         mAdapter.setItems(it)
-                        if (it.isEmpty()) {
-                            viewBinding.stateView.showEmpty()
-                        } else {
-                            viewBinding.stateView.showContent()
-                        }
+                        updateEmptyState(it.isEmpty())
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error observing apps data: ${e.message}")
@@ -443,8 +437,7 @@ class AppsFragment : Fragment() {
                     if (!TextUtils.isEmpty(it)) {
                         hideLoading()
                         requireContext().toast(it)
-                        viewModel.getInstalledApps(userID)
-                        scanUser()
+                        viewModel.getInstalledApps()
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error observing result data: ${e.message}")
@@ -467,7 +460,7 @@ class AppsFragment : Fragment() {
             viewModel.updateSortLiveData.observe(viewLifecycleOwner) {
                 try {
                     if (this::mAdapter.isInitialized) {
-                        viewModel.updateApkOrder(userID, mAdapter.getItems())
+                        viewModel.updateApkOrder(mAdapter.getItems())
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error observing sort data: ${e.message}")
@@ -475,6 +468,17 @@ class AppsFragment : Fragment() {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error in initData: ${e.message}")
+        }
+    }
+
+    private fun updateEmptyState(isEmpty: Boolean) {
+        try {
+            // The RecyclerView is empty across ALL spaces: show the guide view
+            // (custom strings + "add app" shortcut) instead of a blank grid.
+            viewBinding.stateView.showContent()
+            viewBinding.emptyGuide.visibility = if (isEmpty) View.VISIBLE else View.GONE
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating empty state: ${e.message}")
         }
     }
 
@@ -496,7 +500,7 @@ class AppsFragment : Fragment() {
                 positiveButton(R.string.done) {
                     try {
                         showLoading()
-                        viewModel.unInstall(info.packageName, userID)
+                        viewModel.unInstall(info.packageName, info.userId)
                     } catch (e: Exception) {
                         Log.e(TAG, "Error uninstalling app: ${e.message}")
                         hideLoading()
@@ -509,7 +513,6 @@ class AppsFragment : Fragment() {
         }
     }
 
-    
     private fun stopApk(info: AppInfo) {
         try {
             MaterialDialog(requireContext()).show {
@@ -517,7 +520,7 @@ class AppsFragment : Fragment() {
                 message(text = getString(R.string.app_stop_hint,info.name))
                 positiveButton(R.string.done) {
                     try {
-                        BlackBoxCore.get().stopPackage(info.packageName, userID)
+                        BlackBoxCore.get().stopPackage(info.packageName, info.userId)
                         toast(getString(R.string.is_stop,info.name))
                     } catch (e: Exception) {
                         Log.e(TAG, "Error stopping app: ${e.message}")
@@ -530,7 +533,6 @@ class AppsFragment : Fragment() {
         }
     }
 
-    
     private fun clearApk(info: AppInfo) {
         try {
             MaterialDialog(requireContext()).show {
@@ -539,7 +541,7 @@ class AppsFragment : Fragment() {
                 positiveButton(R.string.done) {
                     try {
                         showLoading()
-                        viewModel.clearApkData(info.packageName, userID)
+                        viewModel.clearApkData(info.packageName, info.userId)
                     } catch (e: Exception) {
                         Log.e(TAG, "Error clearing app data: ${e.message}")
                         hideLoading()
@@ -560,7 +562,7 @@ class AppsFragment : Fragment() {
                     .setPositiveButton("Yes") { _, _ ->
                         AppFreezeManager.setExcludedFromAutoFreeze(
                                 info.packageName,
-                                userID,
+                                info.userId,
                                 true
                         )
                         requireContext().toast(
@@ -572,7 +574,7 @@ class AppsFragment : Fragment() {
                     .setNegativeButton("No") { _, _ ->
                         AppFreezeManager.setExcludedFromAutoFreeze(
                                 info.packageName,
-                                userID,
+                                info.userId,
                                 false
                         )
                         requireContext().toast(
@@ -581,7 +583,7 @@ class AppsFragment : Fragment() {
                     }
                     .setNeutralButton(R.string.app_freeze_now) { _, _ ->
                         try {
-                            BlackBoxCore.get().stopPackage(info.packageName, userID)
+                            BlackBoxCore.get().stopPackage(info.packageName, info.userId)
                             requireContext().toast(getString(R.string.app_is_frozen, info.name))
                         } catch (e: Exception) {
                             Log.e(TAG, "Error freezing app: ${e.message}")
@@ -594,23 +596,105 @@ class AppsFragment : Fragment() {
         }
     }
 
-    fun installApk(source: String) {
+    fun installApk(source: String, userId: Int) {
         try {
             showLoading()
-            viewModel.install(source, userID)
+            viewModel.install(source, userId)
         } catch (e: Exception) {
             Log.e(TAG, "Error installing APK: ${e.message}")
             hideLoading()
         }
     }
 
-    private fun scanUser() {
+    private fun showSpaceManagerDialog(userId: Int) {
         try {
-            (requireActivity() as? MainActivity)?.scanUser()
+            val options = arrayOf(
+                    getString(R.string.userRemark),
+                    getString(R.string.fake_location),
+                    getString(R.string.device_spoofing),
+                    getString(R.string.blackbox_gallery_menu)
+            )
+            AlertDialog.Builder(requireContext())
+                    .setTitle(getString(R.string.app_space_manage))
+                    .setItems(options) { _, which ->
+                        try {
+                            when (which) {
+                                0 -> showRenameSpaceDialog(userId)
+                                1 -> {
+                                    val intent = Intent(requireContext(), FakeManagerActivity::class.java)
+                                    intent.putExtra("userID", userId)
+                                    startActivity(intent)
+                                }
+                                2 -> DeviceSpoofingActivity.start(requireContext(), userId)
+                                3 -> BlackBoxGalleryActivity.start(requireContext(), userId)
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error handling space manager option: ${e.message}")
+                        }
+                    }
+                    .setNegativeButton(R.string.cancel, null)
+                    .show()
         } catch (e: Exception) {
-            Log.e(TAG, "Error scanning user: ${e.message}")
+            Log.e(TAG, "Error showing space manager dialog: ${e.message}")
         }
     }
+
+    private fun showRenameSpaceDialog(userId: Int) {
+        try {
+            val currentRemark = try {
+                AppManager.mRemarkSharedPreferences
+                        .getString("Remark$userId", null)
+                        ?.takeIf { it.isNotBlank() }
+                        ?: "User $userId"
+            } catch (e: Exception) {
+                Log.e(TAG, "Error reading space remark: ${e.message}")
+                "User $userId"
+            }
+
+            MaterialDialog(requireContext()).show {
+                title(res = R.string.userRemark)
+                input(hintRes = R.string.userRemark, prefill = currentRemark) { _, input ->
+                    try {
+                        AppManager.mRemarkSharedPreferences.edit {
+                            putString("Remark$userId", input.toString())
+                        }
+                        // Refresh the visible space tags without a full list reload.
+                        try {
+                            if (this@AppsFragment::mAdapter.isInitialized) {
+                                mAdapter.notifyDataSetChanged()
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error refreshing user tags: ${e.message}")
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error saving space remark: ${e.message}")
+                        requireContext().toast("Failed to save space remark: ${e.message}")
+                    }
+                }
+                positiveButton(res = R.string.done)
+                negativeButton(res = R.string.cancel)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error showing rename space dialog: ${e.message}")
+        }
+    }
+
+    private val apkPathResult =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                try {
+                    if (result.resultCode == android.app.Activity.RESULT_OK) {
+                        result.data?.let { data ->
+                            val userId = data.getIntExtra("userID", 0)
+                            val source = data.getStringExtra("source")
+                            if (source != null) {
+                                installApk(source, userId)
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error handling APK path result: ${e.message}")
+                }
+            }
 
     private fun showLoading() {
         try {

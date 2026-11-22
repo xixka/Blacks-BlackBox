@@ -117,6 +117,12 @@
         </activity>
         <activity android:name=".view.list.ListActivity" />
         <activity android:name=".view.fake.FakeManagerActivity" />
+        <activity
+            android:name=".view.backup.BackupActivity"
+            android:exported="false" />
+        <activity
+            android:name=".view.backup.RestoreActivity"
+            android:exported="false" />
 
         <activity
             android:name=".view.main.ShortcutActivity"

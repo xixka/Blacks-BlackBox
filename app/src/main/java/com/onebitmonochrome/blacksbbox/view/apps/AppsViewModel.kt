@@ -15,37 +15,33 @@ class AppsViewModel(private val repo: AppsRepository) : BaseViewModel() {
 
     val launchLiveData = MutableLiveData<Boolean>()
 
-    
     val updateSortLiveData = MutableLiveData<Boolean>()
 
-    fun getInstalledApps(userId: Int) {
+    fun getInstalledApps() {
         launchOnUI {
-            repo.getVmInstallList(userId, appsLiveData)
+            repo.getAllInstalledAppList(appsLiveData)
         }
     }
-    
-    
-    fun getInstalledAppsWithRetry(userId: Int, maxRetries: Int = 3) {
+
+    fun getInstalledAppsWithRetry(maxRetries: Int = 3) {
         var retryCount = 0
-        
+
         fun attemptLoad() {
             launchOnUI {
-                repo.getVmInstallList(userId, appsLiveData)
-                
-                
+                repo.getAllInstalledAppList(appsLiveData)
+
                 val currentApps = appsLiveData.value
                 if ((currentApps == null || currentApps.isEmpty()) && retryCount < maxRetries) {
                     retryCount++
                     Log.d("AppsViewModel", "No apps loaded, retrying... (${retryCount}/${maxRetries})")
-                    
-                    
+
                     android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                         attemptLoad()
-                    }, 1000) 
+                    }, 1000)
                 }
             }
         }
-        
+
         attemptLoad()
     }
 
@@ -73,9 +69,9 @@ class AppsViewModel(private val repo: AppsRepository) : BaseViewModel() {
         }
     }
 
-    fun updateApkOrder(userID: Int,dataList:List<AppInfo>){
+    fun updateApkOrder(dataList: List<AppInfo>){
         launchOnUI {
-            repo.updateApkOrder(userID,dataList)
+            repo.updateApkOrder(dataList)
         }
     }
 }

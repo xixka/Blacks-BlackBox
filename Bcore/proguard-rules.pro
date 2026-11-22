@@ -42,3 +42,15 @@
     @top.niunaijun.blackreflection.annotation.BConstructor.* <methods>;
     @top.niunaijun.blackreflection.annotation.BConstructorNotProcess.* <methods>;
 }
+# ---------------- blackbox-backup v1 (top.niunaijun.blackbox.backup) ----------------
+# The backup package is already covered by the blanket -keep rule for
+# top.niunaijun.blackbox.** above; these explicit rules make the engine's contract
+# independent of that blanket rule and keep Gson-serialized manifest payloads stable.
+-keep class top.niunaijun.blackbox.backup.** { *; }
+-keepclassmembers class top.niunaijun.blackbox.backup.** {
+    <init>(...);
+    <fields>;
+}
+# Gson reflective serialization of the manifest models.
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken

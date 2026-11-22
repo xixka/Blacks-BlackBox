@@ -29,6 +29,27 @@ I made this fork to make the apps I actually care about usable in a virtualized 
 - Privacy-first behavior tightened in PackageManager surfaces, with an explicit opt-in compatibility fallback toggle (`host_signing_fallback`)
 
 ## Changelog
+### 22.11.26 - 4.8 Update: Single-page UI, Backup/Restore, and Meta Wolf migration
+
+This update turns Black's B-Box into a full open-source alternative to Meta Wolf (元萝卜): all your clones on one page, complete backup/restore, and direct migration of existing Meta Wolf backups.
+
+#### Single-page app list
+All installed clones from every virtual space (userId) are now shown in one scrollable page — no more swiping between spaces. Each item shows its space label; long-press adds backup and space management (rename remark, launch fake location / device spoofing / gallery for that space).
+
+#### Backup & Restore (blackbox-backup v1)
+Multi-select backup to a single zip via SAF (choose output location; optional AES-256-GCM password). Includes APK + splits, app data, device-encrypted data, external data, and OBB. Restore shows a preview (apps/versions/sizes/encryption), supports password retry and mapping into any target space, and reapplies sort order / space remarks / freeze flags. Format documented in `docs/plan.md`.
+
+#### Meta Wolf backup import (元萝卜备份导入)
+Pick a Meta Wolf `Mundo-Backup.zip`, enter the 12-word mnemonic identity (+ password if set), choose a target space — done. The format was reverse-engineered for interoperability (see `docs/ylb-format/RESEARCH.md`): WinZip AES zip whose password is the wallet private-key hex, derived from the standard BIP39 mnemonic. Wrong mnemonics are rejected safely; entries that cannot be attributed are reported, never silently dropped.
+
+#### Storage permission removed
+No more "All files access" prompt. All user file entry points use SAF/content URIs; engine data lives in app-private external storage. Installs, backup/restore, and gallery work on Android 5–16 without any storage permission — same permission model as Meta Wolf.
+
+#### Full Chinese localization
+Complete Simplified and Traditional Chinese strings (276 keys per locale); system language is picked up automatically.
+
+> For AI agents working on this repo: start with `AGENTS.md`.
+
 ### 10.05.26 - 4.71 Update: .apks support and gallery reworked and updated slightly
 
 #### Gallery . ݁₊ ⊹ . ݁˖ . ݁

@@ -71,9 +71,12 @@ apps/{escaped_pkg}/：base.apk、splits/、data_user/、data_user_de/、ext_data
 ## 元萝卜对齐清单（作为"备胎"的产品差距追踪）
 
 - [x] 单页应用列表（对应元萝卜首页体验）
-- [x] 多选备份 → 单个 zip（SAF 导出，可选密码）
+- [x] 多选备份 → 单个 zip（SAF 导出，可选 AES-256-GCM 密码）
 - [x] 跨设备还原（APK + 数据 + 排序/备注/冻结标记）
-- [x] 元萝卜 `Mundo-Backup.zip` 导入（助记词 + 密码 → 迁入本引擎空间）
-- [ ] instrumented 测试在 CI 模拟器常态跑（当前手动触发）
-- [ ] 元萝卜真机样本回归（RESEARCH.md §8.2 步骤 3-5 的运行时验证）
+- [x] 元萝卜 `Mundo-Backup.zip` 导入（助记词 + 密码 → 迁入本引擎空间；BIP32/BIP39 过官方向量）
+- [x] 无存储权限（对齐元萝卜：全文件访问弹窗已移除，全部走 SAF/应用私有目录）
+- [x] 简繁中文全量本地化（三语键集对齐）
+- [x] CI 常态绿：assembleDebug + testDebugUnitTest（push/PR 自动触发）
+- [ ] instrumented 测试在 CI 模拟器常态跑（当前 workflow_dispatch 手动触发）
+- [ ] 元萝卜真机样本回归（RESEARCH.md §8.2 步骤 3-5 的运行时验证：拿样本跑候选派生命中）
 - [ ] 备份调度/自动备份（元萝卜未提供，列为差异化项）

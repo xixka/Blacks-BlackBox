@@ -138,6 +138,36 @@ object BackupTestSupport {
         return file
     }
 
+    /**
+     * Rebuilds [sourceBytes] verbatim and appends [extra] entries at the end. Used to inject
+     * hostile entries (path traversal etc.) into an otherwise valid archive without touching
+     * manifest.json / manifest.sha256.
+     */
+    fun rewriteZipAppending(sourceBytes: ByteArray, extra: List<Pair<String, ByteArray>>): ByteArray {
+        val out = ByteArrayOutputStream()
+        ZipOutputStream(out).use { zos ->
+            ZipInputStream(ByteArrayInputStream(sourceBytes)).use { zis ->
+                while (true) {
+                    val e = zis.nextEntry ?: break
+                    zos.putNextEntry(ZipEntry(e.name))
+                    val buf = ByteArray(8192)
+                    while (true) {
+                        val n = zis.read(buf)
+                        if (n == -1) break
+                        zos.write(buf, 0, n)
+                    }
+                    zos.closeEntry()
+                }
+            }
+            extra.forEach { (name, data) ->
+                zos.putNextEntry(ZipEntry(name))
+                zos.write(data)
+                zos.closeEntry()
+            }
+        }
+        return out.toByteArray()
+    }
+
     fun zipEntryNames(bytes: ByteArray): List<String> {
         val names = ArrayList<String>()
         ZipInputStream(ByteArrayInputStream(bytes)).use { zis ->

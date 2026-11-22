@@ -65,6 +65,16 @@ class ConfMergerTest {
     }
 
     @Test
+    fun textConfMergeIsIdempotentWhenAppliedTwice() {
+        val target = "pkg.com.foo.appid = 10042" + "\n" + "keep.me = yes" + "\n"
+        val backup =
+                "pkg.com.foo.appid = 10044" + "\n" + "pkg.com.new.appid = 10045" + "\n"
+        val once = TextLineConfCodec.mergeText(target, backup, setOf("pkg.com.foo.appid"))
+        val twice = TextLineConfCodec.mergeText(once, backup, setOf("pkg.com.foo.appid"))
+        assertEquals(once, twice)
+    }
+
+    @Test
     fun textConfMergeOfUnknownKeyDoesNothing() {
         val target = "pkg.com.foo.appid = 10042\npkg.com.bar.appid = 10043\n"
         val backup = "pkg.com.other.appid = 99999\n"

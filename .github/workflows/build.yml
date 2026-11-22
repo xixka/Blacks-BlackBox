@@ -41,6 +41,17 @@ jobs:
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest --stacktrace --no-daemon
 
+      - name: Android Lint (app + Bcore)
+        run: ./gradlew :app:lintDebug :Bcore:lintDebug --stacktrace --no-daemon
+
+      - name: Upload lint reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-reports
+          path: '**/build/reports/lint-results*.html'
+          if-no-files-found: ignore
+
       - name: Upload unit test results
         if: always()
         uses: actions/upload-artifact@v4

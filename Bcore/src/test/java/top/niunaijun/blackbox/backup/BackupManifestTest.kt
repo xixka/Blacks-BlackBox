@@ -152,6 +152,26 @@ class BackupManifestTest {
     // ---------------------------------------------------------------- TC-U-02
 
     @Test
+    fun `unknown extra fields are tolerated for forward compatibility`() {
+        // plan.md 5.2: v1 -> v2 evolution must stay backward readable; newer archives may
+        // carry fields this engine does not know yet. Gson skips them on deserialize.
+        val json = """{"format_version":1,"app":"Blacks-BlackBox","future_block":{"x":[1,2]},"apps":[]}"""
+        val manifest = BackupManifestCodec.deserialize(json.toByteArray(Charsets.UTF_8))
+        assertEquals(1, manifest.formatVersion)
+        assertEquals("Blacks-BlackBox", manifest.app)
+        assertTrue(manifest.apps.isEmpty())
+    }
+
+    @Test
+    fun `minimal manifest json only requires format_version`() {
+        val manifest = BackupManifestCodec.deserialize("""{"format_version":1}""".toByteArray(Charsets.UTF_8))
+        assertEquals(1, manifest.formatVersion)
+        assertTrue(manifest.apps.isEmpty())
+        assertEquals(false, manifest.encrypted)
+        assertEquals(null, manifest.kdf)
+    }
+
+    @Test
     fun `format_version 999 is rejected with the version in the message`() {
         val json = """
             {

@@ -17,6 +17,7 @@
 package top.niunaijun.blackbox.backup
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Rule
@@ -289,5 +290,53 @@ class BackupEngineTest {
             }
         }
         return out.toByteArray()
+    }
+
+    // ------------------------------------------------------------------ security: zip traversal
+
+    @Test
+    fun `malicious zip entries cannot escape the restore tree`() {
+        val source = tmp.newFolder("srcT")
+        val vr = File(source, "vr")
+        vr.mkdirs()
+        buildAppSkeleton(vr, null, "com.test.app", 0)
+        val packages = BackupTestSupport.FakePackages(mapOf("com.test.app#0" to meta("com.test.app", 0)))
+        val engine = engine(BackupTestSupport.FakeRoots(vr, null), packages, BackupTestSupport.FakeBridge())
+        val (zipBytes, backupResult) = backupToBytes(engine, listOf(BackupRequest("com.test.app", 0)))
+        assertEquals(1, backupResult.succeeded.size)
+
+        // Append hostile entries WITHOUT touching manifest.json/manifest.sha256.
+        val tampered = BackupTestSupport.rewriteZipAppending(
+            zipBytes,
+            listOf(
+                "apps/com.test.app/data_user/../../../escape_user.txt" to "nope".toByteArray(),
+                "apps/com.test.app/base.apk/../../escape_apk.txt" to "nope".toByteArray(),
+                "apps/com.test.app/data_user_de/back\\slash.txt" to "nope".toByteArray(),
+                "apps/com.test.app/ext_data//abs" to "nope".toByteArray(),
+            ),
+        )
+        val archive = BackupTestSupport.bytesToFile(tampered, tmp.newFolder("dstT"), "tampered.zip")
+        val dest = tmp.newFolder("destT")
+        val restoreVr = File(dest, "vr")
+        val restoreEvr = File(dest, "evr")
+        restoreVr.mkdirs()
+        restoreEvr.mkdirs()
+        val restoreEngine = engine(
+            BackupTestSupport.FakeRoots(restoreVr, restoreEvr),
+            packages,
+            BackupTestSupport.FakeBridge(),
+        )
+        val result = restoreEngine.restore(archive, null, null, null, null)
+
+        // The hostile entries are ignored (routed to null), the safe payload still lands.
+        assertEquals(0, result.failed.size)
+        assertEquals(1, result.succeeded.size)
+        assertTrue(File(restoreVr, "data/user/0/com.test.app/files/hello.txt").isFile)
+        assertFalse(File(restoreVr, "escape_user.txt").exists())
+        assertFalse(File(restoreVr, "data/user/escape_user.txt").exists())
+        assertFalse(File(restoreVr, "escape_apk.txt").exists())
+        assertFalse(File(restoreEvr, "escape_user.txt").exists())
+        assertFalse(File(restoreVr, "data/user/0/com.test.app/back\\slash.txt").exists())
+        assertFalse(File(restoreEvr, "abs").exists())
     }
 }

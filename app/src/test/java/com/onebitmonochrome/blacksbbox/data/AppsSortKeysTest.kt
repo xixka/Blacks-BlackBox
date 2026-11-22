@@ -207,4 +207,16 @@ class AppsSortKeysTest {
         assertEquals("AppList12", AppsSortKeys.legacySortKeyFor(12))
         assertFalse(AppsSortKeys.GLOBAL_SORT_KEY == AppsSortKeys.legacySortKeyFor(0))
     }
+
+    @Test
+    fun `migration and serialization are idempotent`() {
+        val legacy = mapOf(0 to "com.a,com.b", 1 to "com.a,com.c", 3 to " , com.d ,")
+        val first = AppsSortKeys.migrateLegacySortKeys(legacy)
+        val second = AppsSortKeys.migrateLegacySortKeys(legacy)
+        assertEquals(first, second)
+
+        val serialized = AppsSortKeys.serializeSortKeys(first)
+        val reparsed = AppsSortKeys.parseSortKeys(serialized)
+        assertEquals(serialized, AppsSortKeys.serializeSortKeys(reparsed))
+    }
 }

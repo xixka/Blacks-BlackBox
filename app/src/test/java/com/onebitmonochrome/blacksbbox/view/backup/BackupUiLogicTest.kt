@@ -404,7 +404,7 @@ class BackupUiLogicTest {
         val twelve = (1..12).joinToString(" ") { "word$it" }
         assertTrue(BackupUiLogic.hasValidYlbMnemonicWordCount(twelve))
         assertTrue(BackupUiLogic.hasValidYlbMnemonicWordCount("  $twelve  "))
-        assertTrue(BackupUiLogic.hasValidYlbMnemonicWordCount("$twelve
+        assertTrue(BackupUiLogic.hasValidYlbMnemonicWordCount(twelve + "
 "))
     }
 

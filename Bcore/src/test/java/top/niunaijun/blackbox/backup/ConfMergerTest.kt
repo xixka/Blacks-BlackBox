@@ -24,7 +24,7 @@ import top.niunaijun.blackbox.backup.confmerge.JsonMapConfCodec
 import top.niunaijun.blackbox.backup.confmerge.TextLineConfCodec
 
 /**
- * TC-U-13: entry-level conf merge. The REAL system/*.conf format in this engine is binary
+ * TC-U-13: entry-level conf merge. The REAL system conf format in this engine is binary
  * Parcel (see ConfMerger KDoc), so the merge semantics are validated on the pluggable codecs:
  * the line-based text codec (string-level assertions, other spaces / packages untouched) and
  * the JSON map codec used for host_prefs.json.

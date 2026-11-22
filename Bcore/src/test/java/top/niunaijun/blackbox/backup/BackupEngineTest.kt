@@ -163,10 +163,11 @@ class BackupEngineTest {
             listOf(BackupRequest("com.test.app", 0)),
             password = "secret123".toCharArray(),
         )
-        assertTrue(backupResult.manifest!!.encrypted)
-        assertEquals(BackupCrypto.KDF_ALGO, backupResult.manifest.kdf!!.algo)
-        assertEquals(120000, backupResult.manifest.kdf!!.iterations)
-        assertEquals(16, backupResult.manifest.kdf!!.salt.length / 2)
+        val encryptedManifest = backupResult.manifest
+        assertTrue(encryptedManifest!!.encrypted)
+        assertEquals(BackupCrypto.KDF_ALGO, encryptedManifest.kdf!!.algo)
+        assertEquals(120000, encryptedManifest.kdf!!.iterations)
+        assertEquals(16, encryptedManifest.kdf!!.salt.length / 2)
 
         val dest = tmp.newFolder("dstEnc")
         val destVr = File(dest, "vr")

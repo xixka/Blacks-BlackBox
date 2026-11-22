@@ -277,11 +277,7 @@
     <string name="share_logs_preparing">正在準備日誌…</string>
     <string name="share_logs_failed">準備日誌失敗</string>
 
-    <!-- 硬編碼 UI 文案外提 -->
-    <string name="storage_permission_required">需要儲存權限</string>
-    <string name="storage_permission_message">本應用程式需要「所有檔案存取」權限才能正常執行沙盒內的應用程式。缺少此權限時，部分應用程式可能無法正常運作。\n\n請在下一個畫面授予權限。</string>
-    <string name="storage_permission_grant">授予權限</string>
-    <string name="storage_permission_later">稍後</string>
+    <!-- 硬編碼 UI 文案外提（原「所有檔案存取」彈窗鍵 storage_permission_* 已隨 MANAGE_EXTERNAL_STORAGE 流程一併移除） -->
     <string name="error_title">錯誤</string>
     <string name="error_ok">確定</string>
     <string name="error_init_failed">應用程式初始化失敗：%1$s</string>

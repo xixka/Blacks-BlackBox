@@ -266,11 +266,9 @@
     <string name="restore_signature_warning">signature differs from backup</string>
     <string name="restore_users_unavailable">Could not load the space list; apps will go back to the spaces recorded in the backup</string>
 
-    <!-- Extracted hardcoded UI text (MainActivity/AppsFragment/AppsAdapter/ListActivity/RestoreActivity/SettingFragment/FakeManagerActivity/GmsRepository/BlackBoxGalleryUserPicker) -->
-    <string name="storage_permission_required">Storage Permission Required</string>
-    <string name="storage_permission_message">This app needs \'All Files Access\' permission to properly run sandboxed apps. Without this permission, some apps may not work correctly.\n\nPlease grant permission in the next screen.</string>
-    <string name="storage_permission_grant">Grant Permission</string>
-    <string name="storage_permission_later">Later</string>
+    <!-- Extracted hardcoded UI text (MainActivity/AppsFragment/AppsAdapter/ListActivity/RestoreActivity/SettingFragment/FakeManagerActivity/GmsRepository/BlackBoxGalleryUserPicker).
+         Note: the "All Files Access" dialog keys (storage_permission_*) were removed together
+         with the MANAGE_EXTERNAL_STORAGE flow; all file entry points are SAF or app-private. -->
     <string name="error_title">Error</string>
     <string name="error_ok">OK</string>
     <string name="error_init_failed">Failed to initialize app: %1$s</string>

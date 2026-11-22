@@ -1,7 +1,6 @@
 package com.onebitmonochrome.blacksbbox.data
 
 import android.content.pm.ApplicationInfo
-import android.content.ContentResolver
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
@@ -13,6 +12,8 @@ import com.onebitmonochrome.blacksbbox.app.App
 import com.onebitmonochrome.blacksbbox.app.AppManager
 import com.onebitmonochrome.blacksbbox.bean.AppInfo
 import com.onebitmonochrome.blacksbbox.bean.InstalledAppBean
+import com.onebitmonochrome.blacksbbox.util.ApkSource
+import com.onebitmonochrome.blacksbbox.util.ApkSourceResolver
 import com.onebitmonochrome.blacksbbox.util.MemoryManager
 import com.onebitmonochrome.blacksbbox.util.getString
 
@@ -440,24 +441,13 @@ class AppsRepository {
 
     fun installApk(source: String, userId: Int, resultLiveData: MutableLiveData<String>) {
         try {
-            val normalizedSource = normalizeApkSource(source)
-            val parsedUri = runCatching { Uri.parse(normalizedSource) }.getOrNull()
-            val scheme = parsedUri?.scheme
-            val looksLikeApkPath =
-                    normalizedSource.endsWith(".apk", ignoreCase = true) ||
-                            normalizedSource.contains(".apk?", ignoreCase = true) ||
-                            normalizedSource.endsWith(".apks", ignoreCase = true) ||
-                            normalizedSource.contains(".apks?", ignoreCase = true)
-            val localFile = if (scheme.isNullOrEmpty()) File(normalizedSource) else null
-            val isLocalFilePath = localFile?.exists() == true || looksLikeApkPath
-            val isContentOrFileUri = scheme == ContentResolver.SCHEME_CONTENT || scheme == ContentResolver.SCHEME_FILE
+            val normalizedSource = ApkSourceResolver.normalize(source)
+            // File-existence is an IO fact supplied to the pure classifier (keeps it JVM-testable).
+            val localFileExists =
+                    !normalizedSource.contains("://") && File(normalizedSource).exists()
+            val apkSource = ApkSourceResolver.classify(normalizedSource, localFileExists)
 
-            Log.i(
-                TAG,
-                "installApk: userId=$userId scheme=${scheme ?: "<none>"} " +
-                    "isContentOrFileUri=$isContentOrFileUri isLocalFilePath=$isLocalFilePath " +
-                    "source=$normalizedSource"
-            )
+            Log.i(TAG, "installApk: userId=$userId source=$normalizedSource kind=$apkSource")
 
             if (normalizedSource.contains("blackbox") ||
                             normalizedSource.contains("niunaijun") ||
@@ -470,18 +460,16 @@ class AppsRepository {
 
                     // For local file paths we can pre-check the archive; for content/file Uris the core
                     // install path will still reject the host package after parsing.
-                    if (isLocalFilePath) {
-                        val file = localFile ?: File(normalizedSource)
-                        if (file.exists()) {
-                            val packageInfo =
-                                    BlackBoxCore.getPackageManager()
-                                            .getPackageArchiveInfo(file.absolutePath, 0)
-                            if (packageInfo != null && packageInfo.packageName == hostPackageName) {
-                                resultLiveData.postValue(
-                                        getString(R.string.install_self_blocked)
-                                )
-                                return
-                            }
+                    if (localFileExists) {
+                        val file = File(normalizedSource)
+                        val packageInfo =
+                                BlackBoxCore.getPackageManager()
+                                        .getPackageArchiveInfo(file.absolutePath, 0)
+                        if (packageInfo != null && packageInfo.packageName == hostPackageName) {
+                            resultLiveData.postValue(
+                                    getString(R.string.install_self_blocked)
+                            )
+                            return
                         }
                     }
                 } catch (e: Exception) {
@@ -491,19 +479,19 @@ class AppsRepository {
 
             val blackBoxCore = BlackBoxCore.get()
 
-            val installResult = when {
-                isContentOrFileUri && parsedUri != null -> {
-                    blackBoxCore.installPackageAsUser(parsedUri, userId)
-                }
+            val installResult = when (val kind = apkSource) {
+                is ApkSource.ContentUri ->
+                        blackBoxCore.installPackageAsUser(Uri.parse(kind.uri), userId)
 
-                isLocalFilePath -> {
-                    val file = localFile ?: File(normalizedSource)
-                    blackBoxCore.installPackageAsUser(file, userId)
-                }
+                is ApkSource.FileUri ->
+                        blackBoxCore.installPackageAsUser(Uri.parse(kind.uri), userId)
 
-                else -> {
+                is ApkSource.LocalPath ->
+                        blackBoxCore.installPackageAsUser(File(kind.path), userId)
+
+                is ApkSource.PackageName -> {
                     // Treat as package-name cloning (installed-on-host -> install-by-system).
-                    blackBoxCore.installPackageAsUser(normalizedSource, userId)
+                    blackBoxCore.installPackageAsUser(kind.name, userId)
                 }
             }
 
@@ -520,28 +508,6 @@ class AppsRepository {
                     App.getContext().getString(R.string.install_exception_fail, e.message)
             )
         }
-    }
-
-    private fun normalizeApkSource(source: String): String {
-        val s = source.trim()
-        if (s.isEmpty()) return s
-
-        // Some pickers/providers return malformed forms like:
-        // - "content:/authority/..." (missing second slash)
-        // - "/content:/authority/..." (File.absolutePath of the malformed form)
-        if (s.startsWith("/content:/")) {
-            return "content://" + s.removePrefix("/content:/")
-        }
-        if (s.startsWith("content:/") && !s.startsWith("content://")) {
-            return "content://" + s.removePrefix("content:/")
-        }
-        if (s.startsWith("/file:/")) {
-            return "file://" + s.removePrefix("/file:/")
-        }
-        if (s.startsWith("file:/") && !s.startsWith("file://")) {
-            return "file://" + s.removePrefix("file:/")
-        }
-        return s
     }
 
     fun unInstall(packageName: String, userID: Int, resultLiveData: MutableLiveData<String>) {

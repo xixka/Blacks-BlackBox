@@ -278,11 +278,7 @@
     <string name="share_logs_preparing">正在准备日志…</string>
     <string name="share_logs_failed">准备日志失败</string>
 
-    <!-- 硬编码 UI 文案外提 -->
-    <string name="storage_permission_required">需要存储权限</string>
-    <string name="storage_permission_message">本应用需要“所有文件访问”权限才能正常运行沙盒内的应用。缺少该权限时，部分应用可能无法正常工作。\n\n请在下一个界面授予权限。</string>
-    <string name="storage_permission_grant">授予权限</string>
-    <string name="storage_permission_later">稍后</string>
+    <!-- 硬编码 UI 文案外提（原“所有文件访问”弹窗键 storage_permission_* 已随 MANAGE_EXTERNAL_STORAGE 流程一并移除） -->
     <string name="error_title">错误</string>
     <string name="error_ok">确定</string>
     <string name="error_init_failed">应用初始化失败：%1$s</string>

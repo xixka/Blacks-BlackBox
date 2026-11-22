@@ -25,6 +25,7 @@ import com.onebitmonochrome.blacksbbox.R
 import com.onebitmonochrome.blacksbbox.app.AppManager
 import com.onebitmonochrome.blacksbbox.bean.InstalledAppBean
 import com.onebitmonochrome.blacksbbox.databinding.ActivityListBinding
+import com.onebitmonochrome.blacksbbox.util.ApkSourceResolver
 import com.onebitmonochrome.blacksbbox.util.InjectionUtil
 import com.onebitmonochrome.blacksbbox.util.inflate
 import com.onebitmonochrome.blacksbbox.view.base.BaseActivity
@@ -234,16 +235,9 @@ class ListActivity : BaseActivity() {
     private val openDocumentedResult =
             registerForActivityResult(ActivityResultContracts.GetContent()) {
                 it?.run {
-                    val raw = it.toString()
-                    val fixed =
-                            when {
-                                raw.startsWith("/content:/") -> "content://" + raw.removePrefix("/content:/")
-                                raw.startsWith("content:/") && !raw.startsWith("content://") -> "content://" + raw.removePrefix("content:/")
-                                raw.startsWith("/file:/") -> "file://" + raw.removePrefix("/file:/")
-                                raw.startsWith("file:/") && !raw.startsWith("file://") -> "file://" + raw.removePrefix("/file:/")
-                                else -> raw
-                            }
-                    finishWithResult(fixed)
+                    // SAF result: fix malformed scheme forms, then hand the content:// URI to
+                    // the install flow (no storage permission needed on any API level).
+                    finishWithResult(ApkSourceResolver.normalize(it.toString()))
                 }
             }
 

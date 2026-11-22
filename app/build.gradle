@@ -54,6 +54,14 @@ android {
         unitTests.returnDefaultValues = true
     }
 
+    lint {
+        // Enforce "no new lint issues" while keeping the pre-existing upstream issues
+        // (e.g. FollowMyLocationOverlay MissingSuperCall, untouched by this branch)
+        // in an auditable committed baseline. Regenerate with: ./gradlew :app:updateLintBaseline
+        baseline = file("lint-baseline.xml")
+        abortOnError true
+    }
+
     applicationVariants.configureEach { variant ->
         variant.outputs.configureEach { output ->
             output.outputFileName = "BlackBox_${variant.versionName}_${output.baseName}.apk"

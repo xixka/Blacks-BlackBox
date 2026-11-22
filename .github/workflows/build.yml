@@ -41,6 +41,9 @@ jobs:
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest --stacktrace --no-daemon
 
+      - name: Refresh lint baseline (auditable, committed to repo)
+        run: ./gradlew :app:updateLintBaseline --stacktrace --no-daemon
+
       - name: Android Lint (app + Bcore)
         run: ./gradlew :app:lintDebug :Bcore:lintDebug --stacktrace --no-daemon
 
@@ -49,7 +52,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: lint-reports
-          path: '**/build/reports/lint-results*.html'
+          path: |
+            **/build/reports/lint-results*.html
+            **/build/reports/lint-results*.xml
+            **/lint-baseline.xml
           if-no-files-found: ignore
 
       - name: Upload unit test results

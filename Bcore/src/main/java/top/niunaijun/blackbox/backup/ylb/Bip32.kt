@@ -77,8 +77,9 @@ object Bip32 {
      */
     fun ckdPriv(parent: Node, index: Int, hardened: Boolean): Node? {
         // Non-hardened indices use the low 31 bits; the hardened flag is passed separately.
-        require(index >= 0) { "index out of range: $index" }
-        require(index < 0x80000000.toInt()) { "index out of range: $index" }
+        // 0x80000000 is Long-typed and Int.MIN_VALUE after toInt(), so compare against the
+        // literal 0x7FFFFFFF mask instead (writing "index < 0x80000000.toInt()" is always false).
+        require(index in 0..0x7FFFFFFF) { "index out of range: $index" }
         val data = ByteArray(37)
         if (hardened) {
             // ser256(k_par) with a leading 0x00 marker + ser32(index + 2^31).

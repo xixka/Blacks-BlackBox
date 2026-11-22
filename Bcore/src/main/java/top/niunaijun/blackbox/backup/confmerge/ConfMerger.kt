@@ -152,13 +152,16 @@ class TextLineConfCodec : ConfCodec {
         fun mergeText(targetText: String, backupText: String, keysToRestore: Collection<String>): String {
             val backupEntries = TextLineConfCodec().decode(backupText.toByteArray(Charsets.UTF_8))
             val wanted = keysToRestore.toSet()
+            // Only apply the backup when it actually carries at least one selected key:
+            // a backup that lacks the requested entries must not touch the target at all.
+            val backupMatches = wanted.any { it in backupEntries }
             val seen = HashSet<String>()
             val appended = ArrayList<String>()
             val out = StringBuilder(targetText.length + 64)
             targetText.lineSequence().forEach { line ->
                 val trimmed = line.trim()
                 var handled = false
-                if (trimmed.isNotEmpty() && !trimmed.startsWith("#")) {
+                if (backupMatches && trimmed.isNotEmpty() && !trimmed.startsWith("#")) {
                     val eq = trimmed.indexOf('=')
                     if (eq > 0) {
                         val key = trimmed.substring(0, eq).trim()
@@ -175,17 +178,18 @@ class TextLineConfCodec : ConfCodec {
                     out.append(line).append('\n')
                 }
             }
-            // Backup-only keys get appended in backup order, regardless of [keysToRestore]:
-            // the restore adds everything the backup carries, while the in-place override
-            // above stays restricted to the selected keys (other spaces remain untouched).
-            for ((key, value) in backupEntries) {
-                if (seen.add(key)) {
-                    appended.add("$key = $value")
+            // When the backup matches, its remaining entries are appended in backup order
+            // (restore adds everything the backup carries; target-only lines stay verbatim).
+            if (backupMatches) {
+                for ((key, value) in backupEntries) {
+                    if (seen.add(key)) {
+                        appended.add("$key = $value")
+                    }
                 }
-            }
-            if (appended.isNotEmpty()) {
-                out.append('\n').append("# entries restored from backup").append('\n')
-                appended.forEach { out.append(it).append('\n') }
+                if (appended.isNotEmpty()) {
+                    out.append('\n').append("# entries restored from backup").append('\n')
+                    appended.forEach { out.append(it).append('\n') }
+                }
             }
             return out.toString().trimEnd('\n') + "\n"
         }

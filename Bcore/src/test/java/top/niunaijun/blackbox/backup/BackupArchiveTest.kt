@@ -261,8 +261,8 @@ class BackupArchiveTest {
         )
         assertEquals(2, result.succeeded.size)
         val names = zipEntryNames(zipBytes)
-        assertTrue(names.any { it.startsWith("apps/com.a.b_2d_/") })
-        assertTrue(names.any { it.startsWith("apps/com.a.b_5f_/") })
+        assertTrue(names.any { it.startsWith("apps/com.a.b_2d_c/") })
+        assertTrue(names.any { it.startsWith("apps/com.a.b_5f_c/") })
         // Manifest keeps the ORIGINAL package names.
         assertEquals(
             setOf("com.a.b-c", "com.a.b_c"),

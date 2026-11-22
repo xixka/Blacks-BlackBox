@@ -211,8 +211,11 @@ object BackupArchive {
                 continue
             }
             if (child.isDirectory) {
+                // The cache exclusion applies only to the ROOT level of each packed tree
+                // (data_user/cache, ext_data/cache, ...); a nested "files/cache" directory
+                // is regular user content and must be kept.
                 val sub = writeDirRecursively(
-                    zos, child, "$zipPath/", excludeCacheDirName, key, symlinkSupport, skipZipPaths, onSymlink,
+                    zos, child, "$zipPath/", /* excludeCacheDirName = */ null, key, symlinkSupport, skipZipPaths, onSymlink,
                 )
                 bytes += sub.first
                 count += sub.second

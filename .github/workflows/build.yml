@@ -86,17 +86,17 @@ jobs:
           name: debug-apk
           path: apk
 
-      - name: Rename to stable asset name
+      - name: Keep universal APK only
         run: |
           cd apk
           ls -la
-          i=0
-          for f in *.apk; do
-            i=$((i+1))
-            if [ "$f" != "Blacks-BlackBox-dev${i}.apk" ]; then
-              mv -f "$f" "Blacks-BlackBox-dev${i}.apk"
-            fi
-          done
+          # ABI splits produce: universal (no abi suffix) + arm64-v8a + armeabi-v7a.
+          # Publish only the universal APK so the release has a single install-anywhere file.
+          UNIVERSAL=$(ls *.apk | grep -vE 'arm64-v8a|armeabi-v7a|x86|x86_64' | head -1)
+          echo "universal apk: $UNIVERSAL"
+          # delete ABI-specific APKs, keep only the universal one
+          rm -f *arm64-v8a*.apk *armeabi-v7a*.apk *x86*.apk
+          mv -f "$UNIVERSAL" "Blacks-BlackBox-dev.apk"
           ls -la
 
       - name: Overwrite dev release

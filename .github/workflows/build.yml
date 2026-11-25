@@ -72,6 +72,48 @@ jobs:
           name: debug-apk
           path: app/build/outputs/apk/debug/*.apk
 
+  release:
+    name: Publish APK to Releases (dev, overwrite)
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download debug APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: debug-apk
+          path: apk
+
+      - name: Rename to stable asset name
+        run: |
+          cd apk
+          ls -la
+          i=0
+          for f in *.apk; do
+            i=$((i+1))
+            if [ "$f" != "Blacks-BlackBox-dev${i}.apk" ]; then
+              mv -f "$f" "Blacks-BlackBox-dev${i}.apk"
+            fi
+          done
+          ls -la
+
+      - name: Overwrite dev release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: dev
+          name: Dev Build
+          target_commitish: main
+          files: apk/*.apk
+          prerelease: true
+          generate_release_notes: true
+          body: |
+            自动构建的开发版 APK（tag `dev`，每次推送 main 自动覆盖更新）。
+
+            - 构建提交：${{ github.sha }}
+            - 包含元萝卜（Meta Wolf）备份导入功能的全部代码
+
   instrumented-tests:
     name: Instrumented Tests (emulator API 34)
     runs-on: ubuntu-latest
